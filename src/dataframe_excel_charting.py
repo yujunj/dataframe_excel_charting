@@ -5,8 +5,6 @@
 
 # import modules
 import xlsxwriter
-import random
-import pandas as pd
 import numpy as np
 
 
@@ -62,6 +60,16 @@ class DataFrameExcelCharting(object):
         # change the flag
         self._to_excel = 1
             
+    def getTopN(self, columns=None, n=5, ascending=True, inplace=True):
+        """Given one or more columns """
+        assert columns is not None, "Please specify a list of columns to get top"
+        # sort the dataframe 
+        self.data.sort(columns=columns, axis=0, ascending=ascending, inplace=inplace)
+        self._to_excel = 0
+        print "Dataframe has been changed, please write to Excel again"
+        
+        
+        
     def topNChart(self, columns=None, n=5, category_col=None, 
                   chart_type="column", x_axis="name", y_axis="value", title="title"):
         """top N chart"""
@@ -133,6 +141,10 @@ class DataFrameExcelCharting(object):
                               })
         # insert chart
         self.insertChart(col, row)
+        
+    # TODO: scatter plot    
+    def scatterPlot(self, columns=None):
+        return
 
 
 # In[ ]:
