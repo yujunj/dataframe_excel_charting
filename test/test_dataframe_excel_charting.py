@@ -29,7 +29,7 @@ test_class.topNChart(columns=["col1", "col3"], n=10, category_col="category")
 test_class.bucketsNChart(column="col4",n_buckets=10)
 test_class.getBucketsCounts(column="col4", n_buckets=10)
 test_class.scatterPlot(["col1", "col4"], "category", "scatter")
-test_class.insertImage("A", test_class.num_rows + 4, "test_image.png")
+test_class.insertImage("A", test_class.num_rows + 3 + test_class._num_charts * 15, "test_geoplot.png")
 test_class.closeWorkBook()
 
 
@@ -54,6 +54,19 @@ for df in dfs:
     test_class = DataFrameExcelCharting(df, workbook)
     test_class.writeToExcel("test_sheet{0}".format(i))
     i = i + 1
+workbook.close()
+
+
+df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_us_cities.csv')
+print df.head()
+
+workbook = xlsxwriter.Workbook("geo_plot.xlsx")
+test_class = DataFrameExcelCharting(df, workbook)
+test_class.writeToExcel(sheet_name="geo_plot")
+test_class.geoPlot(text_col="name", value_col="pop", lat="lat", lon="lon", 
+                   n_buckets=5, image_name="geo_plot", 
+                   scale=5000, plot_type="scattergeo", 
+                   scope='usa', map_type="albers usa")
 workbook.close()
 
 
