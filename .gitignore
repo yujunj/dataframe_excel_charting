@@ -105,3 +105,4 @@ ENV/
 .DS_Store
 test/test_df.py
 *.html
+*.xlsx
