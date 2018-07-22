@@ -97,3 +97,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+*.xlsx
+.project
+.pydevproject
+.settings/org.eclipse.core.resources.prefs
+*.png
+.DS_Store
