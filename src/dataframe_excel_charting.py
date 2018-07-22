@@ -60,14 +60,13 @@ class DataFrameExcelCharting(object):
         # change the flag
         self._to_excel = 1
             
-    def getTopN(self, columns=None, n=5, ascending=True, inplace=True):
+    def getTopN(self, columns=None, n=5, ascending=False, inplace=True):
         """Given one or more columns """
         assert columns is not None, "Please specify a list of columns to get top"
         # sort the dataframe 
-        self.data.sort(columns=columns, axis=0, ascending=ascending, inplace=inplace)
+        self.data.sort_values(by=columns, axis=0, ascending=ascending, inplace=inplace)
         self._to_excel = 0
         print "Dataframe has been changed, please write to Excel again"
-        
         
         
     def topNChart(self, columns=None, n=5, category_col=None, 
@@ -128,7 +127,7 @@ class DataFrameExcelCharting(object):
         # create a new chart
         self.createChart(chart_type, x_axis, y_axis, title)
         
-        """plot bucket chart"""
+        # plot bucket chart
         count, interval = self.getBucketsCounts(column=column, n_buckets=n_buckets)
         col = self.column_map[column]
         row = self.num_rows + 3
@@ -143,8 +142,35 @@ class DataFrameExcelCharting(object):
         self.insertChart(col, row)
         
     # TODO: scatter plot    
-    def scatterPlot(self, columns=None):
-        return
+    def scatterPlot(self, columns=None, category_col=None, 
+                    chart_type="scatter", x_axis="name", y_axis="value", title="title"):
+        """plot scatter chart of x_column vs y_column"""
+        assert self._to_excel == 1, "Please write data to excel first"
+        assert columns is not None, "Please specify a list of columns to plot"
+        assert category_col is not None, "Please specify a categorical column"
+        
+        if not isinstance(columns, list):
+            columns = list(columns)
+        
+        cat_col = self.column_map[category_col]
+            
+        # create a chart
+        self.createChart(chart_type, x_axis, y_axis, title)
+        for column in columns:
+            col = self.column_map[column]
+            self.chart.add_series(
+                {
+                'values': '={0}!${1}{2}:${1}{3}'.format(self.worksheet_name, col, 2, self.num_rows), 
+                'categories': "={0}!${1}{2}:${1}{3}".format(self.worksheet_name, cat_col, 2, self.num_rows),
+                'name': "={0}!${1}{2}".format(self.worksheet_name, col, 1)
+                }
+            )
+        # insert chart
+        self.insertChart(col, self.num_rows + 3)
+    
+    def insertImage(self, insert_col, insert_row, image_path=None):
+        """insert image to worksheet at insert col and insert row"""
+        self.worksheet.insert_image("{0}{1}".format(insert_col, insert_row), image_path)
 
 
 # In[ ]:
