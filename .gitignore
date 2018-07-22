@@ -103,3 +103,4 @@ ENV/
 .settings/org.eclipse.core.resources.prefs
 *.png
 .DS_Store
+test/test_df.py
