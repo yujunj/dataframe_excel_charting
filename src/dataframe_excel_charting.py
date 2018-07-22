@@ -6,6 +6,11 @@
 # import modules
 import xlsxwriter
 import numpy as np
+import plotly.offline as offline
+import plotly.plotly as py
+import colorsys
+
+
 
 
 # In[1]:
@@ -18,6 +23,8 @@ class DataFrameExcelCharting(object):
         self.num_rows = len(df)
         self.column_map = dict()
         self._to_excel = 0
+        self._num_charts = 0
+        self._num_urls = 0
         
 #     def createWorkBook(self, workbook_name):
 #         """create work book"""
@@ -43,6 +50,12 @@ class DataFrameExcelCharting(object):
     def insertChart(self, insert_col, insert_row):
         """insert chart to work sheet"""
         self.worksheet.insert_chart('{0}{1}'.format(insert_col, insert_row), self.chart)
+        self._num_charts = self._num_charts + 1
+        
+    def insertURL(self, insert_col, insert_row, file_url, string):
+        """insert URL to work sheet"""
+        self.worksheet.write_url('{0}{1}'.format(insert_col, insert_row), file_url, string=string)
+        self._num_urls = self._num_urls + 1
         
     def writeToExcel(self, sheet_name="Sheet1"):
         """write data frame to excel with header"""
@@ -92,10 +105,10 @@ class DataFrameExcelCharting(object):
                                    'name': columns[i], 
                                    'categories': "={0}!${1}${2}:${1}${3}".format(self.worksheet_name, cat_col, data_row, data_row + n - 1)
                                   })
-        # insert the chart    
-        self.insertChart(col, self.num_rows + 2)
+        # insert the chart and prevent charts overlapping 
+        self.insertChart(col, self.num_rows + 2 + 15 * self._num_charts)
     
-    def getBucketsCounts(self, column=None, n_buckets=5):
+    def getBucketsCounts(self, column=None, n_buckets=5, str_interval=True):
         """get buckets and counts"""
         # None column check
         assert column is not None, "Please specify a column name"
@@ -116,7 +129,10 @@ class DataFrameExcelCharting(object):
         bins = [np.arange(lower, upper, diff / n_buckets)]
         bins = np.append(bins, upper)
         count, interval = np.histogram(data_array, bins=bins)
-        interval = ["[{0}, {1})".format(interval[i], interval[i + 1]) for i in range(0,len(interval) - 1)] # + diff / n_buckets / 2.0 
+        if str_interval:
+            interval = ["[{0}, {1})".format(interval[i], interval[i + 1]) for i in range(0,len(interval) - 1)]
+        else:
+            interval = [(interval[i], interval[i + 1]) for i in range(0,len(interval) - 1)]
         return count, interval
             
     def bucketsNChart(self, column=None, n_buckets=5,
@@ -138,10 +154,9 @@ class DataFrameExcelCharting(object):
                                'categories': '={0}!${1}${2}:${1}${3}'.format(self.worksheet_name, col, row + n_buckets, row + n_buckets + n_buckets -1),
                                'gap': 5
                               })
-        # insert chart
-        self.insertChart(col, row)
+        # insert chart and prevent charts overlapping
+        self.insertChart(col, row + self._num_charts * 15)
         
-    # TODO: scatter plot    
     def scatterPlot(self, columns=None, category_col=None, 
                     chart_type="scatter", x_axis="name", y_axis="value", title="title"):
         """plot scatter chart of x_column vs y_column"""
@@ -165,12 +180,81 @@ class DataFrameExcelCharting(object):
                 'name': "={0}!${1}{2}".format(self.worksheet_name, col, 1)
                 }
             )
-        # insert chart
-        self.insertChart(col, self.num_rows + 3)
+        # insert chart and prevent charts overlapping
+        self.insertChart(col, self.num_rows + 3 + self._num_charts * 15)
     
     def insertImage(self, insert_col, insert_row, image_path=None):
         """insert image to worksheet at insert col and insert row"""
         self.worksheet.insert_image("{0}{1}".format(insert_col, insert_row), image_path)
+        self._num_charts = self._num_charts + 1
+        
+    def _getRGBColors(self, n=5):
+        """generate n colors and convert to RGB strings"""
+        assert n >= 1, "Please specify a positive number of colors"
+        assert isinstance(n, int), "Please use a positive integer as n"
+        
+        HSV_tuples = [(x * 1.0 / n, 0.5, 0.5) for x in range(n)]
+        RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
+        return map(lambda x: "rgb({0}, {1}, {2})".format(round(x[0] * 255), round(x[1] * 255), round(x[2] * 255)), RGB_tuples)
+        
+    def geoPlot(self, text_col=None, value_col=None, lat="lat_col", lon="lon_col", 
+                n_buckets=5, image_name=None, 
+                scale=100, plot_type="scattergeo", 
+                scope='south america', map_type="equirectangular"):
+        """Plot Geo map based on latitude and longitude"""
+        assert set([text_col, value_col, lat, lon]).issubset(set(self.data.columns)), "Please specify valid column names for text, value, lat and lon"
+                
+        counts, limits = self.getBucketsCounts(value_col, n_buckets, str_interval=False)
+        colors = self._getRGBColors(n_buckets)
+        if np.max(counts) - np.min(counts) > 0.9 * self.num_rows:
+            print "Buckets are highly skewed"
+            
+        places = []
+        for i in range(len(limits)):
+            lim = limits[i]
+            # handle the edge case
+            if i == len(limits) - 1:
+                df_sub = self.data[(self.data[value_col] >= lim[0]) & (self.data[value_col] <= lim[1])]
+            else:
+                df_sub = self.data[(self.data[value_col] >= lim[0]) & (self.data[value_col] < lim[1])]
+            place = dict(
+                type = plot_type,
+                # locations = ["peru"],
+                # locationmode = "USA-states",
+                lon = df_sub[lon],
+                lat = df_sub[lat],
+                text = df_sub[text_col],
+                marker = dict(
+                    size = df_sub[value_col] / scale,
+                    color = colors[i],
+                    line = dict(width=0.5, color='rgb(40,40,40)'),
+                    sizemode = 'area'
+                ),
+                name = '[{0}, {1})'.format(lim[0],lim[1]) )
+            places.append(place)
+    
+        layout = dict(
+                title = value_col,
+                showlegend = True,
+                geo = dict(
+                    scope = scope,
+                    projection=dict( type=map_type, scale = 1),
+                    showland = True,
+                    landcolor = 'rgb(217, 217, 217)',
+                    subunitwidth=1,
+                    countrywidth=1,
+                    subunitcolor="rgb(255, 255, 255)",
+                    countrycolor="rgb(255, 255, 255)"
+                ),
+            )
+    
+        fig = dict(data=places, layout=layout)
+        # py.iplot(fig, validate=False, filename='d3-bubble-map-populations' )
+        file_url = offline.plot(fig, validate=False, 
+                            filename='{}.html'.format(image_name), auto_open=False)
+        # py.image.save_as(fig, '{}.png'.format(image_name), scale=3)
+        if self._to_excel:
+            self.insertURL(insert_col="A", insert_row=self.num_rows + 2 + self._num_urls, file_url=file_url, string=image_name)
 
 
 # In[ ]:

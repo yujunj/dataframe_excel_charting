@@ -104,3 +104,4 @@ ENV/
 *.png
 .DS_Store
 test/test_df.py
+*.html
