@@ -251,6 +251,7 @@ class DataFrameExcelCharting(object):
             interval = ["[{0}, {1})".format(interval[i], interval[i + 1]) for i in range(0,len(interval) - 1)]
         else:
             interval = [(interval[i], interval[i + 1]) for i in range(0,len(interval) - 1)]
+            
         return count, interval
             
     def bucketsNChart(self, column=None, n_buckets=5,

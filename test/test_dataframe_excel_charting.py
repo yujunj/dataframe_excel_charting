@@ -23,13 +23,13 @@ print df.head()
 
 workbook = xlsxwriter.Workbook("test_charting.xlsx")
 test_class = DataFrameExcelCharting(df, workbook)
-test_class.getTopN(["col1", "col3"], 10)
+test_class.getTopN(["col1", "col3"])
 test_class.writeToExcel("test_sheet")
 test_class.topNChart(columns=["col1", "col3"], n=10, category_col="category")
-test_class.bucketsNChart(column="col4",n_buckets=10)
-test_class.getBucketsCounts(column="col4", n_buckets=10)
+test_class.bucketsNChart(column="col2",n_buckets=10)
+# test_class.getBucketsCounts(column="col4", n_buckets=10)
 test_class.scatterPlot(["col1", "col4"], "category", "scatter")
-test_class.insertImage("A", test_class.num_rows + 3 + test_class._num_charts * 15, "test_geoplot.png")
+# test_class.insertImage("A", test_class.num_rows + 3 + test_class._num_charts * 15, "test_geoplot.png")
 test_class.closeWorkBook()
 
 
