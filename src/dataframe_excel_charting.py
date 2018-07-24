@@ -9,6 +9,7 @@ import numpy as np
 import plotly.offline as offline
 # import plotly.plotly as py
 import colorsys
+# import exceptions
 
 
 class DataFrameExcelCharting(object):
@@ -136,14 +137,20 @@ class DataFrameExcelCharting(object):
         """
         # create workbook and worksheet
         self.createWorkSheet(sheet_name)
+        # drop row with NA 
+        # self.data.dropna(axis=0, how='any', inplace=True)
         # write data frame to excel
         header_row = 1
         for i in range(0, len(self.data.columns)):
             col = xlsxwriter.utility.xl_col_to_name(i)
             self.worksheet.write("{0}{1}".format(col, header_row), self.data.columns[i])
             # fill NaN with -1
-            self.worksheet.write_column("{0}{1}".format(col, header_row + 1), 
+            if not isinstance(self.data[self.data.columns[i]].dtype, object):
+                self.worksheet.write_column("{0}{1}".format(col, header_row + 1), 
                                         self.data[self.data.columns[i]].replace([np.inf, -np.inf], np.nan).fillna(-1).values)
+            else:
+                self.worksheet.write_column("{0}{1}".format(col, header_row + 1), 
+                                            self.data[self.data.columns[i]].apply(lambda x: ','.join([str(c) for c in x]) if isinstance(x, list) or isinstance(x, tuple) or isinstance(x, np.ndarray) else str(x)))
             self.column_map[self.data.columns[i]] = col
         # change the flag
         self._to_excel = 1
@@ -280,7 +287,7 @@ class DataFrameExcelCharting(object):
         # plot bucket chart
         count, interval = self.getBucketsCounts(column=column, n_buckets=n_buckets)
         col = self.column_map[column]
-        row = self.num_rows + 3
+        row = self.num_rows + 2 + self._num_charts * 15
         self.worksheet.write_column('{0}{1}'.format(col, row), count)
         self.worksheet.write_column('{0}{1}'.format(col, row + n_buckets), interval)
         
@@ -289,7 +296,7 @@ class DataFrameExcelCharting(object):
                                'gap': 5
                               })
         # insert chart and prevent charts overlapping
-        self.insertChart(col, row + self._num_charts * 15)
+        self.insertChart(col, self.num_rows + 2 + self._num_charts * 15)
         
     def scatterPlot(self, columns=None, category_col=None, 
                     chart_type="scatter", x_axis="name", y_axis="value", title="title"):
@@ -363,7 +370,37 @@ class DataFrameExcelCharting(object):
         HSV_tuples = [(x * 1.0 / n, 0.5, 0.5) for x in range(n)]
         RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
         return map(lambda x: "rgb({0}, {1}, {2})".format(round(x[0] * 255), round(x[1] * 255), round(x[2] * 255)), RGB_tuples)
+    
+    def getCoordinatesRange(self, lat=None, lon=None):
+        """Get Coordinates Range Method
         
+        Note:
+            Get the range of Coordinates to display
+            
+        Args:
+            lag: Latitude column
+            lon: Longitude column
+            
+        Return:
+            lat_lower: lower bound of latitude.
+            lat_upper: upper bound of latitude.
+            lon_lower: lower bound of longitude.
+            lon_upper: upper bound of longitude.
+        
+        """
+        assert set([lat, lon]).issubset(set(self.data.columns)), "Please specify valid column names for lat and lon"
+        # remove inf and nan from lat and lon
+        lat_array = self.data[lat].replace([np.inf, -np.inf], np.nan)
+        lon_array = self.data[lon].replace([np.inf, -np.inf], np.nan)
+        lat_array = lat_array[~np.isnan(lat_array)]
+        lon_array = lon_array[~np.isnan(lon_array)]
+        # calculate lat and lon interval
+        lat_lower = np.floor(lat_array.min()) - 15.0
+        lat_upper = np.ceil(lat_array.max()) + 15.0
+        lon_lower = np.floor(lon_array.min()) - 15.0
+        lon_upper = np.ceil(lon_array.max()) + 15.0
+        return lat_lower, lat_upper, lon_lower, lon_upper
+    
     def geoPlot(self, text_col=None, value_col=None, lat="lat_col", lon="lon_col", 
                 n_buckets=5, image_name=None, 
                 scale=100, plot_type="scattergeo", 
@@ -395,6 +432,7 @@ class DataFrameExcelCharting(object):
                 
         counts, limits = self.getBucketsCounts(value_col, n_buckets, str_interval=False)
         colors = self._getRGBColors(n_buckets)
+        lat_lower, lat_upper, lon_lower, lon_upper = self.getCoordinatesRange(lat, lon)
         if np.max(counts) - np.min(counts) > 0.9 * self.num_rows:
             print "Buckets are highly skewed"
             
@@ -421,7 +459,7 @@ class DataFrameExcelCharting(object):
                 ),
                 name = '[{0}, {1})'.format(lim[0],lim[1]) )
             places.append(place)
-    
+        # print lat_lower, lat_upper, lon_lower, lon_upper
         layout = dict(
                 title = value_col,
                 showlegend = True,
@@ -429,11 +467,24 @@ class DataFrameExcelCharting(object):
                     scope = scope,
                     projection=dict( type=map_type, scale = 1),
                     showland = True,
-                    landcolor = 'rgb(217, 217, 217)',
+                    showcoastlines = True, 
+                    showocean = True,
+                    showlakes = True,
+                    showrivers = True,
+                    showcountries = True,
+                    showsubunits = True,
+                    # landcolor = 'rgb(217, 217, 217)',
+                    landcolor = "rgb(250, 250, 210)",
                     subunitwidth=1,
                     countrywidth=1,
-                    subunitcolor="rgb(255, 255, 255)",
-                    countrycolor="rgb(255, 255, 255)"
+                    subunitcolor="rgb(60, 179, 113)",
+                    countrycolor="rgb(105, 105, 105)",
+                    lonaxis = dict( range = [lon_lower, lon_upper] ),
+                    lataxis = dict( range = [lat_lower, lat_upper] ),
+#                     domain = dict(
+#                         x = [ 0, 1 ],
+#                         y = [ 0, 1 ]
+#                     )
                 ),
             )
     
