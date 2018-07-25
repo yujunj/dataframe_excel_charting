@@ -9,7 +9,7 @@ import numpy as np
 import plotly.offline as offline
 # import plotly.plotly as py
 import colorsys
-# import exceptions
+import exceptions
 
 
 class DataFrameExcelCharting(object):
@@ -44,6 +44,7 @@ class DataFrameExcelCharting(object):
         self._to_excel = 0
         self._num_charts = 0
         self._num_urls = 0
+        self._row_to_insert = self.num_rows + 2
         
 #     def createWorkBook(self, workbook_name):
 #         """create work book"""
@@ -91,6 +92,7 @@ class DataFrameExcelCharting(object):
         self.chart.set_y_axis({'name': y_axis})
         self.chart.set_x_axis({'name': x_axis})
         self.chart.set_title({'name': title})
+        self.chart.set_size({'x_scale': 2, 'y_scale': 2})
         
     def insertChart(self, insert_col, insert_row):
         """Insert Chart Method.
@@ -106,6 +108,22 @@ class DataFrameExcelCharting(object):
         """
         self.worksheet.insert_chart('{0}{1}'.format(insert_col, insert_row), self.chart)
         self._num_charts = self._num_charts + 1
+        self._row_to_insert = self._row_to_insert + 30
+        
+#     def _hideRows(self, start_row, num_rows):
+#         """Hide Rows Method
+#         
+#         Notes:
+#             Hide unnecessary rows
+#             
+#         Args:
+#             start_row: The starting row to hide
+#             num_rows: Number of rows to hide
+#         
+#         """
+#         for i in range(num_rows):
+#             self.worksheet.set_row(start_row + i, None, None, {'hidden': True})
+#         self._row_to_insert = self._row_to_insert + num_rows
         
     def insertURL(self, insert_col, insert_row, file_url, string):
         """Insert URL Method.
@@ -145,12 +163,14 @@ class DataFrameExcelCharting(object):
             col = xlsxwriter.utility.xl_col_to_name(i)
             self.worksheet.write("{0}{1}".format(col, header_row), self.data.columns[i])
             # fill NaN with -1
-            if not isinstance(self.data[self.data.columns[i]].dtype, object):
+            try:
                 self.worksheet.write_column("{0}{1}".format(col, header_row + 1), 
                                         self.data[self.data.columns[i]].replace([np.inf, -np.inf], np.nan).fillna(-1).values)
-            else:
+            except TypeError:
+                # save the syntax for tuple and np.ndarray for unexpected case
+                # or isinstance(x, tuple) or isinstance(x, np.ndarray) 
                 self.worksheet.write_column("{0}{1}".format(col, header_row + 1), 
-                                            self.data[self.data.columns[i]].apply(lambda x: ','.join([str(c) for c in x]) if isinstance(x, list) or isinstance(x, tuple) or isinstance(x, np.ndarray) else str(x)))
+                                            self.data[self.data.columns[i]].apply(lambda x: ','.join([str(c) for c in x]) if isinstance(x, list) else str(x)))
             self.column_map[self.data.columns[i]] = col
         # change the flag
         self._to_excel = 1
@@ -215,7 +235,7 @@ class DataFrameExcelCharting(object):
                                    'categories': "={0}!${1}${2}:${1}${3}".format(self.worksheet_name, cat_col, data_row, data_row + n - 1)
                                   })
         # insert the chart and prevent charts overlapping 
-        self.insertChart(col, self.num_rows + 2 + 15 * self._num_charts)
+        self.insertChart(col, self._row_to_insert)
     
     def getBucketsCounts(self, column=None, n_buckets=5, str_interval=True):
         """Get Buckets Counts Method.
@@ -287,7 +307,7 @@ class DataFrameExcelCharting(object):
         # plot bucket chart
         count, interval = self.getBucketsCounts(column=column, n_buckets=n_buckets)
         col = self.column_map[column]
-        row = self.num_rows + 2 + self._num_charts * 15
+        row = self._row_to_insert
         self.worksheet.write_column('{0}{1}'.format(col, row), count)
         self.worksheet.write_column('{0}{1}'.format(col, row + n_buckets), interval)
         
@@ -296,7 +316,8 @@ class DataFrameExcelCharting(object):
                                'gap': 5
                               })
         # insert chart and prevent charts overlapping
-        self.insertChart(col, self.num_rows + 2 + self._num_charts * 15)
+        self.insertChart(col, self._row_to_insert)
+        # self._hideRows(row, n_buckets + n_buckets - 1)
         
     def scatterPlot(self, columns=None, category_col=None, 
                     chart_type="scatter", x_axis="name", y_axis="value", title="title"):
@@ -337,7 +358,7 @@ class DataFrameExcelCharting(object):
                 }
             )
         # insert chart and prevent charts overlapping
-        self.insertChart(col, self.num_rows + 3 + self._num_charts * 15)
+        self.insertChart(col, self._row_to_insert)
     
     def insertImage(self, insert_col, insert_row, image_path=None):
         """Insert Image Method.
@@ -404,7 +425,7 @@ class DataFrameExcelCharting(object):
     def geoPlot(self, text_col=None, value_col=None, lat="lat_col", lon="lon_col", 
                 n_buckets=5, image_name=None, 
                 scale=100, plot_type="scattergeo", 
-                scope='south america', map_type="equirectangular"):
+                scope='world', map_type="natural earth"):
         """Geo Plot Method.
 
         Note:
