@@ -28,11 +28,12 @@ test_class.bucketsNChart(column="col2",n_buckets=10)
 # test_class.getBucketsCounts(column="col4", n_buckets=10)
 test_class.scatterPlot(["col1", "col4"], "category", "scatter")
 # test_class.insertImage("A", test_class.num_rows + 3 + test_class._num_charts * 15, "test_geoplot.png")
-
+# for i in range(117, 137):
+#     test_class.worksheet.set_row(i, None, None, {'hidden': True})
 
 # edge cases test 
 df = pd.DataFrame({
-    'A': [['a', 'b', 'c'], np.nan, (123, 43), "asdf", None, np.ndarray(10)]
+    'A': [['a', 'b', 'c'], ["A", "B", 321], np.nan, (123, 43), "asdf", None, np.ndarray(10)]
     })
 print df.head()
 test_class = DataFrameExcelCharting(df, workbook)
@@ -67,7 +68,7 @@ test_class.writeToExcel(sheet_name="geo_plot")
 test_class.geoPlot(text_col="name", value_col="pop", lat="lat", lon="lon", 
                    n_buckets=5, image_name="geo_plot", 
                    scale=5000, plot_type="scattergeo", 
-                   scope='usa', map_type="albers usa")
+                   scope='world', map_type="natural earth")
 
 
 # test with data
@@ -227,6 +228,6 @@ test_class.bucketsNChart(column="Marginal_Total_Demand",n_buckets=3)
 test_class.geoPlot(text_col="Node_ID", value_col="Total_Transit", lat="lat", lon="lon", 
                    n_buckets=5, image_name="node_total_transit_plot", 
                    scale=100, plot_type="scattergeo", 
-                scope='south america', map_type="natural earth")
+                scope='world', map_type="natural earth")
 # close the workbook
 workbook.close()
