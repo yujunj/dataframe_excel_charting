@@ -116,7 +116,7 @@ class DataFrameExcelCharting(object):
         self.worksheet.insert_chart('{0}{1}'.format(insert_col, insert_row), self.chart)
         self._num_charts = self._num_charts + 1
         # the row to insert is equal to start row plus number of rows a chart takes
-        self._row_to_insert = self._row_to_insert + np.around(self._chart_height / self._row_height)
+        self._row_to_insert = self._row_to_insert + np.around(self._chart_height / (self._row_height * self._height_to_pixel))
         
 #     def _hideRows(self, start_row, num_rows):
 #         """Hide Rows Method
