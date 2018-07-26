@@ -45,6 +45,13 @@ class DataFrameExcelCharting(object):
         self._num_charts = 0
         self._num_urls = 0
         self._row_to_insert = self.num_rows + 2
+        self._chart_width_default = 480 # default pixel
+        self._chart_height_default = 288 # default pixel
+        self._row_height_default = 15 # default row height
+        self._chart_height = self._chart_height_default
+        self._chart_width = self._chart_width_default
+        self._row_height = self._row_height_default
+        self._height_to_pixel = 1.28 # calculate by 288 / (15 * 15)
         
 #     def createWorkBook(self, workbook_name):
 #         """create work book"""
@@ -92,7 +99,7 @@ class DataFrameExcelCharting(object):
         self.chart.set_y_axis({'name': y_axis})
         self.chart.set_x_axis({'name': x_axis})
         self.chart.set_title({'name': title})
-        self.chart.set_size({'x_scale': 2, 'y_scale': 2})
+        self.chart.set_size({"width": self._chart_width, "height": self._chart_height})
         
     def insertChart(self, insert_col, insert_row):
         """Insert Chart Method.
@@ -108,7 +115,8 @@ class DataFrameExcelCharting(object):
         """
         self.worksheet.insert_chart('{0}{1}'.format(insert_col, insert_row), self.chart)
         self._num_charts = self._num_charts + 1
-        self._row_to_insert = self._row_to_insert + 30
+        # the row to insert is equal to start row plus number of rows a chart takes
+        self._row_to_insert = self._row_to_insert + np.around(self._chart_height / self._row_height)
         
 #     def _hideRows(self, start_row, num_rows):
 #         """Hide Rows Method
@@ -301,6 +309,9 @@ class DataFrameExcelCharting(object):
         """
         assert self._to_excel == 1, "Please write data to excel first"
         
+        # calculate the chart height in order to cover all data inserted
+        if n_buckets * 2 > self._chart_height / self._height_to_pixel / self._row_height: 
+            self._chart_height = np.around(n_buckets * 2 * self._row_height * self._height_to_pixel)
         # create a new chart
         self.createChart(chart_type, x_axis, y_axis, title)
         
