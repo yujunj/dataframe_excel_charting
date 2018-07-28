@@ -22,7 +22,7 @@ print df.head()
 
 test_class = DataFrameExcelCharting(df, workbook)
 # test_class.getTopN(["col1", "col3"])
-test_class.writeToExcel("test_basic_charts")
+test_class.writeToExcel("test basic charts")
 test_class.topNChart(columns=["col1", "col3"], n=10, category_col="category")
 test_class.bucketsNChart(column="col2",n_buckets=10)
 # test_class.getBucketsCounts(column="col4", n_buckets=10)
@@ -38,7 +38,7 @@ df = pd.DataFrame({
 print df.head()
 test_class = DataFrameExcelCharting(df, workbook)
 # test_class.getTopN(["Marginal_Population_Served", "Marginal_Total_Demand", "Total_Demand"])
-test_class.writeToExcel("test_write_list")
+test_class.writeToExcel("test write list")
 
 # list of DFs
 df1 = pd.DataFrame(np.random.randn(100, 4), columns=["col1", "col2", "col3", "col4"])
@@ -56,7 +56,7 @@ dfs = [df1, df2]
 i = 1
 for df in dfs:
     test_class = DataFrameExcelCharting(df, workbook)
-    test_class.writeToExcel("test_multiple_sheet{0}".format(i))
+    test_class.writeToExcel("test multiple sheet{0}".format(i))
     i = i + 1
 
 # test geo plot
@@ -221,7 +221,7 @@ expected_metrics_by_node_df.loc[len(expected_metrics_by_node_df)] = [
 
 test_class = DataFrameExcelCharting(expected_metrics_by_node_df, workbook)
 test_class.getTopN(["Marginal_Population_Served", "Marginal_Total_Demand", "Total_Demand"])
-test_class.writeToExcel("test_data")
+test_class.writeToExcel("test data")
 test_class.topNChart(columns=["Marginal_Population_Served", "Marginal_Total_Demand", "Total_Demand"], 
                      n=10, category_col="Node_ID")
 test_class.bucketsNChart(column="Marginal_Total_Demand",n_buckets=3)
