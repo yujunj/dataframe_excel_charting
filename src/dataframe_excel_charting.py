@@ -95,10 +95,10 @@ class DataFrameExcelCharting(object):
             title: The name of the chart
             
         """
-        self.chart = self.workbook.add_chart({'type': chart_type})
-        self.chart.set_y_axis({'name': y_axis})
-        self.chart.set_x_axis({'name': x_axis})
-        self.chart.set_title({'name': title})
+        self.chart = self.workbook.add_chart({"type": chart_type})
+        self.chart.set_y_axis({"name": y_axis})
+        self.chart.set_x_axis({"name": x_axis})
+        self.chart.set_title({"name": title})
         self.chart.set_size({"width": self._chart_width, "height": self._chart_height})
         
     def insertChart(self, insert_col, insert_row):
@@ -113,7 +113,7 @@ class DataFrameExcelCharting(object):
             insert_row: Excel row number to insert the chart.
             
         """
-        self.worksheet.insert_chart('{0}{1}'.format(insert_col, insert_row), self.chart)
+        self.worksheet.insert_chart("{0}{1}".format(insert_col, insert_row), self.chart)
         self._num_charts = self._num_charts + 1
         # the row to insert is equal to start row plus number of rows a chart takes
         self._row_to_insert = self._row_to_insert + np.around(self._chart_height / (self._row_height * self._height_to_pixel))
@@ -130,7 +130,7 @@ class DataFrameExcelCharting(object):
 #         
 #         """
 #         for i in range(num_rows):
-#             self.worksheet.set_row(start_row + i, None, None, {'hidden': True})
+#             self.worksheet.set_row(start_row + i, None, None, {"hidden": True})
 #         self._row_to_insert = self._row_to_insert + num_rows
         
     def insertURL(self, insert_col, insert_row, file_url, string):
@@ -146,7 +146,7 @@ class DataFrameExcelCharting(object):
             string: Name or mask of the file_url.
             
         """
-        self.worksheet.write_url('{0}{1}'.format(insert_col, insert_row), file_url, string=string)
+        self.worksheet.write_url("{0}{1}".format(insert_col, insert_row), file_url, string=string)
         self._num_urls = self._num_urls + 1
         
     def writeToExcel(self, sheet_name="Sheet1"):
@@ -164,7 +164,7 @@ class DataFrameExcelCharting(object):
         # create workbook and worksheet
         self.createWorkSheet(sheet_name)
         # drop row with NA 
-        # self.data.dropna(axis=0, how='any', inplace=True)
+        # self.data.dropna(axis=0, how="any", inplace=True)
         # write data frame to excel
         header_row = 1
         for i in range(0, len(self.data.columns)):
@@ -178,7 +178,7 @@ class DataFrameExcelCharting(object):
                 # save the syntax for tuple and np.ndarray for unexpected case
                 # or isinstance(x, tuple) or isinstance(x, np.ndarray) 
                 self.worksheet.write_column("{0}{1}".format(col, header_row + 1), 
-                                            self.data[self.data.columns[i]].apply(lambda x: ','.join([str(c) for c in x]) if isinstance(x, list) else str(x)))
+                                            self.data[self.data.columns[i]].apply(lambda x: ",".join([str(c) for c in x]) if isinstance(x, list) else str(x)))
             self.column_map[self.data.columns[i]] = col
         # change the flag
         self._to_excel = 1
@@ -238,9 +238,9 @@ class DataFrameExcelCharting(object):
         data_row = 2
         for i in range(0, len(columns)):
             col = self.column_map[columns[i]]
-            self.chart.add_series({'values': "={0}!${1}${2}:${1}${3}".format(self.worksheet_name, col, data_row, data_row + n - 1), 
-                                   'name': columns[i], 
-                                   'categories': "={0}!${1}${2}:${1}${3}".format(self.worksheet_name, cat_col, data_row, data_row + n - 1)
+            self.chart.add_series({"values": "='{0}'!${1}${2}:${1}${3}".format(self.worksheet_name, col, data_row, data_row + n - 1), 
+                                   "name": columns[i], 
+                                   "categories": "='{0}'!${1}${2}:${1}${3}".format(self.worksheet_name, cat_col, data_row, data_row + n - 1)
                                   })
         # insert the chart and prevent charts overlapping 
         self.insertChart(col, self._row_to_insert)
@@ -319,12 +319,12 @@ class DataFrameExcelCharting(object):
         count, interval = self.getBucketsCounts(column=column, n_buckets=n_buckets)
         col = self.column_map[column]
         row = self._row_to_insert
-        self.worksheet.write_column('{0}{1}'.format(col, row), count)
-        self.worksheet.write_column('{0}{1}'.format(col, row + n_buckets), interval)
+        self.worksheet.write_column("{0}{1}".format(col, row), count)
+        self.worksheet.write_column("{0}{1}".format(col, row + n_buckets), interval)
         
-        self.chart.add_series({'values': '={0}!${1}${2}:${1}${3}'.format(self.worksheet_name, col, row, row + n_buckets - 1),
-                               'categories': '={0}!${1}${2}:${1}${3}'.format(self.worksheet_name, col, row + n_buckets, row + n_buckets + n_buckets -1),
-                               'gap': 5
+        self.chart.add_series({"values": "='{0}'!${1}${2}:${1}${3}".format(self.worksheet_name, col, row, row + n_buckets - 1),
+                               "categories": "='{0}'!${1}${2}:${1}${3}".format(self.worksheet_name, col, row + n_buckets, row + n_buckets + n_buckets -1),
+                               "gap": 5
                               })
         # insert chart and prevent charts overlapping
         self.insertChart(col, self._row_to_insert)
@@ -363,9 +363,9 @@ class DataFrameExcelCharting(object):
             col = self.column_map[column]
             self.chart.add_series(
                 {
-                'values': '={0}!${1}{2}:${1}{3}'.format(self.worksheet_name, col, 2, self.num_rows), 
-                'categories': "={0}!${1}{2}:${1}{3}".format(self.worksheet_name, cat_col, 2, self.num_rows),
-                'name': "={0}!${1}{2}".format(self.worksheet_name, col, 1)
+                "values": "='{0}'!${1}{2}:${1}{3}".format(self.worksheet_name, col, 2, self.num_rows), 
+                "categories": "='{0}'!${1}{2}:${1}{3}".format(self.worksheet_name, cat_col, 2, self.num_rows),
+                "name": "='{0}'!${1}{2}".format(self.worksheet_name, col, 1)
                 }
             )
         # insert chart and prevent charts overlapping
@@ -436,7 +436,7 @@ class DataFrameExcelCharting(object):
     def geoPlot(self, text_col=None, value_col=None, lat="lat_col", lon="lon_col", 
                 n_buckets=5, image_name=None, 
                 scale=100, plot_type="scattergeo", 
-                scope='world', map_type="natural earth"):
+                scope="world", map_type="natural earth"):
         """Geo Plot Method.
 
         Note:
@@ -455,7 +455,7 @@ class DataFrameExcelCharting(object):
             n_buckets: Number of categories desired. 
             image_name: Name of the HTML file generated. 
             scale: A number to adjust magnitude of value_col to proper bubble size. bubble size is equal to magnitude of value_col divided by scale.
-            plot_type: "scattergeo' by default
+            plot_type: "scattergeo" by default
             scope: enumeration of ("world" | "usa" | "europe" | "asia" | "africa" | "north america" | "south america").
             map_type: enumberation of ("equirectangular" | "mercator" | "orthographic" | "natural earth" | "kavrayskiy7" | "miller" | "robinson" | "eckert4" | "azimuthal equal area" | "azimuthal equidistant" | "conic equal area" | "conic conformal" | "conic equidistant" | "gnomonic" | "stereographic" | "mollweide" | "hammer" | "transverse mercator" | "albers usa" | "winkel tripel" | "aitoff" | "sinusoidal")
             
@@ -486,10 +486,10 @@ class DataFrameExcelCharting(object):
                 marker = dict(
                     size = df_sub[value_col] / scale,
                     color = colors[i],
-                    line = dict(width=0.5, color='rgb(40,40,40)'),
-                    sizemode = 'area'
+                    line = dict(width=0.5, color="rgb(40,40,40)"),
+                    sizemode = "area"
                 ),
-                name = '[{0}, {1})'.format(lim[0],lim[1]) )
+                name = "[{0}, {1})".format(lim[0],lim[1]) )
             places.append(place)
         # print lat_lower, lat_upper, lon_lower, lon_upper
         layout = dict(
@@ -505,7 +505,7 @@ class DataFrameExcelCharting(object):
                     showrivers = True,
                     showcountries = True,
                     showsubunits = True,
-                    # landcolor = 'rgb(217, 217, 217)',
+                    # landcolor = "rgb(217, 217, 217)",
                     landcolor = "rgb(250, 250, 210)",
                     subunitwidth=1,
                     countrywidth=1,
@@ -521,10 +521,10 @@ class DataFrameExcelCharting(object):
             )
     
         fig = dict(data=places, layout=layout)
-        # py.iplot(fig, validate=False, filename='d3-bubble-map-populations' )
+        # py.iplot(fig, validate=False, filename="d3-bubble-map-populations" )
         file_url = offline.plot(fig, validate=False, 
-                            filename='{}.html'.format(image_name), auto_open=False)
-        # py.image.save_as(fig, '{}.png'.format(image_name), scale=3)
+                            filename="{}.html".format(image_name), auto_open=False)
+        # py.image.save_as(fig, "{}.png".format(image_name), scale=3)
         if self._to_excel:
             self.insertURL(insert_col="A", insert_row=self.num_rows + 2 + self._num_urls, file_url=file_url, string=image_name)
 
