@@ -6,10 +6,12 @@
 # import modules
 import xlsxwriter
 import numpy as np
+import pandas as pd
 import plotly.offline as offline
 # import plotly.plotly as py
 import colorsys
-import exceptions
+import copy
+# import exceptions
 
 
 class DataFrameExcelCharting(object):
@@ -42,7 +44,7 @@ class DataFrameExcelCharting(object):
         self.num_rows = len(df)
         self.column_map = dict()
         self._to_excel = 0
-        self._num_charts = 0
+        # self._num_charts = 0
         self._num_urls = 0
         self._row_to_insert = self.num_rows + 2
         self._chart_width_default = 480 # default pixel
@@ -69,6 +71,7 @@ class DataFrameExcelCharting(object):
             worksheet_name: the name of the work sheet.
             
         """
+        assert worksheet_name is not None, "Please pass in a valid worksheet name"
         self.worksheet_name = worksheet_name
         self.worksheet = self.workbook.add_worksheet(self.worksheet_name)
         
@@ -114,7 +117,7 @@ class DataFrameExcelCharting(object):
             
         """
         self.worksheet.insert_chart("{0}{1}".format(insert_col, insert_row), self.chart)
-        self._num_charts = self._num_charts + 1
+        # self._num_charts = self._num_charts + 1
         # the row to insert is equal to start row plus number of rows a chart takes
         self._row_to_insert = self._row_to_insert + np.around(self._chart_height / (self._row_height * self._height_to_pixel))
         
@@ -174,7 +177,7 @@ class DataFrameExcelCharting(object):
             try:
                 self.worksheet.write_column("{0}{1}".format(col, header_row + 1), 
                                         self.data[self.data.columns[i]].replace([np.inf, -np.inf], np.nan).fillna(-1).values)
-            except TypeError:
+            except (TypeError, ValueError):
                 # save the syntax for tuple and np.ndarray for unexpected case
                 # or isinstance(x, tuple) or isinstance(x, np.ndarray) 
                 self.worksheet.write_column("{0}{1}".format(col, header_row + 1), 
@@ -244,6 +247,55 @@ class DataFrameExcelCharting(object):
                                   })
         # insert the chart and prevent charts overlapping 
         self.insertChart(col, self._row_to_insert)
+        
+    def _cleanNumericColumn(self, column):
+        """Clean Numeric Column Method.
+        
+        Note:
+            Remove NaN and Inf from specified
+        
+        Args:
+            column: The column interested
+            
+        Return:
+            data_array (ndarray): numpy ndarray of column after removing NaN and Inf
+        """
+        # None column check
+        assert column is not None, "Please specify a column name"
+        assert column in self.data.columns, "Please choose a valid column"
+        
+        # filter out NaN and Inf
+        data_array = self.data[column]
+        data_array = data_array[~np.isnan(data_array)]
+        data_array = data_array[~np.isinf(data_array)]
+        # return data_array
+        return data_array
+        
+    def _getBins(self, data_array, n_buckets=5):
+        """Get Bins Method.
+        
+        Note: 
+            Get the buckets boundary.
+            
+        Args:
+            column: The interested column.
+            n_buckets: Number of buckets needed.
+            
+        Return:
+            bins (list(double)): List of double of buckets boundary, length is n_buckets + 1
+            
+        """
+        # check n_buckets
+        assert n_buckets >= 1, "Please specify a positive number of buckets"
+        assert isinstance(n_buckets, int), "Please use a positive integer as n_buckets"
+        
+        # calculate count and interval
+        lower = np.floor(data_array.min())
+        upper = np.ceil(data_array.max())
+        diff = upper - lower
+        bins = [np.arange(lower, upper, diff / n_buckets)]
+        bins = np.append(bins, upper)
+        return bins
     
     def getBucketsCounts(self, column=None, n_buckets=5, str_interval=True):
         """Get Buckets Counts Method.
@@ -263,24 +315,10 @@ class DataFrameExcelCharting(object):
             interval (list(tuple)): List of tuples of buckets boundary, if str_interval is False.  
 
         """
-        # None column check
-        assert column is not None, "Please specify a column name"
-        assert column in self.data.columns, "Please choose a valid column"
-        
-        # check n_buckets
-        assert n_buckets >= 1, "Please specify a positive number of buckets"
-        assert isinstance(n_buckets, int), "Please use a positive integer as n_buckets"
-        
-        # filter out NaN and Inf
-        data_array = self.data[column]
-        data_array = data_array[~np.isnan(data_array)]
-        data_array = data_array[~np.isinf(data_array)]
-        # calculate count and interval
-        lower = np.floor(data_array.min())
-        upper = np.ceil(data_array.max())
-        diff = upper - lower
-        bins = [np.arange(lower, upper, diff / n_buckets)]
-        bins = np.append(bins, upper)
+        # get data array
+        data_array = self._cleanNumericColumn(column)
+        # get bins
+        bins = self._getBins(data_array, n_buckets)
         count, interval = np.histogram(data_array, bins=bins)
         if str_interval:
             interval = ["[{0}, {1})".format(interval[i], interval[i + 1]) for i in range(0,len(interval) - 1)]
@@ -329,6 +367,136 @@ class DataFrameExcelCharting(object):
         # insert chart and prevent charts overlapping
         self.insertChart(col, self._row_to_insert)
         # self._hideRows(row, n_buckets + n_buckets - 1)
+        
+    def _aggregation(self, group_column=None, aggregate_columns=None, aggregate_method="sum"):
+        """Aggregation Method
+        
+        Note: 
+            Internal aggregation method
+            Only support mean, count, sum
+        
+        Args:
+            group_column: desired column to group on.
+            n_bucket: number of buckets.
+            aggregate_columns: a single column or a list of aggregation columns
+            aggregate_method: aggregation method, sum, count or mean
+        
+        Return:
+            aggregated_df (pd.DataFrame): Aggregated Dataframe
+        
+        """
+        assert group_column is not None, "Please specify a list of columns to group by"
+        assert aggregate_columns is not None, "Please specify a list of columns to aggregate on"
+        # convert aggregate_columns to list
+        if not isinstance(aggregate_columns, list):
+            aggregate_columns = list(aggregate_columns)
+        # value check
+        assert group_column in self.data.columns, "Please specify a valid column to group by"
+        assert set(aggregate_columns).issubset(set(self.data.columns)), "Please specify a valid list of columns to aggregate on"
+        assert set([aggregate_method]).issubset(set(["sum", "mean", "count"])), "Please specify valid aggregation method, options: 'sum', 'count', 'mean'"
+        
+        # perform aggregatioin, sum, non-zero count and non NaN mean
+        if aggregate_method == "sum":
+            aggregated_df = self.data.groupby(group_column)[aggregate_columns].agg(np.sum)
+        elif aggregate_method == "count":
+            aggregated_df = self.data.groupby(group_column)[aggregate_columns].agg(np.count_nonzero)
+        elif aggregate_method == "mean":
+            aggregated_df = self.data.groupby(group_column)[aggregate_columns].agg(np.nanmean)
+        # rename columns
+        aggregated_df.columns = map(lambda x: "{} of {}".format(aggregate_method, x), aggregate_columns)
+        # convert index to column
+        aggregated_df.reset_index(inplace=True)
+        return aggregated_df
+            
+    def aggregateBucketsChart(self, bucket_column=None, n_buckets=5, 
+                               aggregate_columns=None, aggregate_method="sum",
+                               sheet_name=None, 
+                               x_axis=None, y_axis=None, title=None):
+        """Aggregated Buckets Chart Method
+        
+        Note:
+            Group on bucket_column by n_buckets,
+            Perform aggregate_method on aggregate_columns 
+            Write the data into a new sheet
+            Then plot the table
+            
+        Args:
+            bucket_column: desired column to bucketize.
+            n_bucket: number of buckets.
+            aggregate_columns: a single column or a list of aggregation columns
+            aggregate_method: aggregation method, sum, count or mean
+            sheet_name: name of the sheet to write
+            x_axis: name of x axis
+            y_axis: name of y axis
+            title: title of the chart
+        
+        """
+        # ensure to write to excel first
+        assert self._to_excel == 1, "Please write data to excel first"
+        # use all columns if non is provided 
+        if aggregate_columns is None:
+            aggregate_columns = self.data.columns
+        # convert aggregate_columns to list
+        if not isinstance(aggregate_columns, list):
+            aggregate_columns = list(aggregate_columns)
+            
+        # get data array
+        data_array = self._cleanNumericColumn(bucket_column)
+        # get bins
+        bins = self._getBins(data_array, n_buckets)
+        # save self.data in a temporary variable
+        _temp_data = copy.deepcopy(self.data)
+        
+        # modify self.data
+        group_column = "{}_buckets".format(bucket_column)
+        # add group column
+        self.data[group_column] = pd.cut(self.data[bucket_column], bins=bins)
+        
+        # aggregation 
+        self.data = self._aggregation(group_column, aggregate_columns, aggregate_method)
+        
+        # write to excel sheet
+        if sheet_name is None:
+            sheet_name = "bkt_{0}_grp_{1}_agg_{2}".format(n_buckets, bucket_column, "_".join(aggregate_columns))
+            # in case sheet name is longer than excel limit
+            if len(sheet_name) > 30:
+                sheet_name = sheet_name[:30]
+        # save the sheet name to a temporary variable
+        if self.worksheet is not None:
+            _temp_sheet_ = self.worksheet
+            _temp_sheet_name_ = self.worksheet_name
+        # write to sheet name
+        self.writeToExcel(sheet_name)
+        
+        # add chart
+        cat_col = self.column_map[group_column]
+        # create a chart
+        if x_axis is None:
+            x_axis = group_column
+        if y_axis is None:
+            y_axis = aggregate_method
+        if title is None:
+            title = "Aggregation Chart"
+        self.createChart("column", x_axis, y_axis, title)
+        # add series to chart
+        columns = [x for x in self.data.columns if x != group_column]
+        data_row = 2
+        for i in range(0, len(columns)):
+            col = self.column_map[columns[i]]
+            self.chart.add_series({"values": "='{0}'!${1}${2}:${1}${3}".format(self.worksheet_name, col, data_row, data_row + n_buckets - 1), 
+                                   "name": columns[i], 
+                                   "categories": "='{0}'!${1}${2}:${1}${3}".format(self.worksheet_name, cat_col, data_row, data_row + n_buckets - 1)
+                                  })
+        # save row to insert as a temp variable
+        _temp_row_to_insert_ = self._row_to_insert
+        # insert the chart
+        self.insertChart(col, data_row + n_buckets)
+        
+        # revert attributes back
+        self.data = _temp_data
+        self.worksheet = _temp_sheet_
+        self.worksheet_name = _temp_sheet_name_
+        self._row_to_insert = _temp_row_to_insert_
         
     def scatterPlot(self, columns=None, category_col=None, 
                     chart_type="scatter", x_axis="name", y_axis="value", title="title"):
