@@ -408,6 +408,22 @@ class DataFrameExcelCharting(object):
         aggregated_df.reset_index(inplace=True)
         return aggregated_df
             
+    def multipleAggregation(self, group_column, aggregation={}):
+        """Multiple Aggregation Method
+        
+        """
+        output_df = None
+        for method in aggregation.keys():
+            aggregate_method = method
+            aggregate_columns = aggregation[method]
+            temp_df = _aggregation(self, group_column, aggregate_columns, aggregate_method)
+            if output_df is None:
+                output_df = temp_df
+            else:
+                output_df = output_df.merge(temp_df, on=group_column, how="outer")
+
+        return output_df
+    
     def aggregateBucketsChart(self, bucket_column=None, n_buckets=5, 
                                aggregate_columns=None, aggregate_method="sum",
                                sheet_name=None, 
