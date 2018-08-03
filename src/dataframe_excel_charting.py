@@ -416,7 +416,7 @@ class DataFrameExcelCharting(object):
         for method in aggregation.keys():
             aggregate_method = method
             aggregate_columns = aggregation[method]
-            temp_df = self._aggregation(self, group_column, aggregate_columns, aggregate_method)
+            temp_df = self._aggregation(group_column, aggregate_columns, aggregate_method)
             if output_df is None:
                 output_df = temp_df
             else:
