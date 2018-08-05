@@ -11,6 +11,7 @@ import plotly.offline as offline
 # import plotly.plotly as py
 import colorsys
 import copy
+from altair.vega.v2.schema.core import transform
 # import exceptions
 
 
@@ -151,6 +152,37 @@ class DataFrameExcelCharting(object):
         """
         self.worksheet.write_url("{0}{1}".format(insert_col, insert_row), file_url, string=string)
         self._num_urls = self._num_urls + 1
+        
+    @staticmethod
+    def addColumn(df, col_name, condition, value_true, value_false):
+        """
+        Usage:
+        
+            new_df = addColumn(df=df, 
+                               col_name="col5", 
+                               condition=(df["col1"] > 0),
+                               value_true=df["col1"], 
+                               value_false=df["col2"])
+        """
+        new_df = copy.deepcopy(df)
+        new_df[col_name] = np.where(condition, value_true, value_false)
+        
+        return new_df
+    
+    @staticmethod
+    def columnTransformation(df, col_name, trans_func=lambda x: x ** 2):
+        """
+        Usage:
+
+            new_df = columnTransformation(df=df, 
+                                          col_name = "col5", 
+                                          trans_func=lambda x: x ** 2)
+        
+        """
+        new_df = copy.deepcopy(df)
+        new_df[col_name] = new_df[col_name].apply(trans_func, axis = 1)
+        
+        return new_df
         
     def writeToExcel(self, sheet_name="Sheet1"):
         """Write to Excel Method.
