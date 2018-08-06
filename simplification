@@ -1,0 +1,122 @@
+def countryTAMAnalysisPER(self, worksheet_name, base_sheet_name):
+        """
+        Country TAM Analysis-PER
+
+        """
+        try:
+            worksheet = self.openWorkSheet(worksheet_name)
+        except AssertionError:
+            worksheet = self.createWorkSheet(worksheet_name)
+        # write title and note on 1st and 2nd rows
+        self.mergeCellsAndWrite(worksheet, "C1:L1", "Country TAM Analysis-PER")
+        self.mergeCellsAndWrite(worksheet, "A2:M2", "[SPACO]")
+        # write table frame
+        self.writeTableFrame(worksheet, table_type=2)
+        # set border
+        self.setTableBorder(worksheet, table_type=2)
+
+        # insert formula
+        
+        self.writeFormulaToCell(
+            worksheet, "C7", "=SUM('{}'!B:B)".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(
+            worksheet, "C8", "=SUM('{}'!AS:AS)".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(
+            worksheet, "C9", "=SUM('{}'!AW:AW)".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(
+            worksheet, "C10", "=SUM('{}'!AX:AX)".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(
+            worksheet, "C11", "=SUM('{}'!J:J)".format(base_sheet_name)
+        )
+        # BLANK LINE AT C12
+        self.writeFormulaToCell(
+            worksheet, "C13", "=SUM('{}'!AX:AX)".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(
+            worksheet, "C14", "=SUM('{}'!AY:AY)".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(
+            worksheet, "C15", "=SUM('{}'!AZ:AZ)".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(worksheet, "C16", "=C13+C14+C15")
+
+        self.writeFormulaToCell(worksheet, "D8", "=C8/C$7")
+        self.writeFormulaToCell(worksheet, "D9", "=C9/C$7")
+        self.writeFormulaToCell(worksheet, "D10", "=C10/C$7")
+        self.writeFormulaToCell(worksheet, "D11", "=C11/C$7")
+        self.writeFormulaToCell(worksheet, "D13", "=C13/C$7")
+        self.writeFormulaToCell(worksheet, "D14", "=C14/C$7")
+        self.writeFormulaToCell(worksheet, "D15", "=C15/C$7")
+        self.writeFormulaToCell(worksheet, "D16", "=C16/C$7")
+        #
+
+        self.writeFormulaToCell(
+            worksheet, "E6", "=COUNTA('{}'!A:A)-1".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(
+            worksheet, "E8", "=COUNTIF('{}'!AS:AS,\">0\")".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(
+            worksheet, "E9", "=COUNTIFS('{}'!$E:$E,\">0.25\")".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(
+            worksheet, "E10", "=COUNTIFS('{}'!$G:$G,\">0.25\")".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(
+            worksheet, "E13", "=COUNTIFS('{}'!AV:AV,\"=3G\")".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(
+            worksheet, "E14", "=COUNTIFS('{}'!$AU:$AU,\">.25\")".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(
+            worksheet, "E15", "=COUNTIF('{}'!$D:$D,\"<.25\")".format(base_sheet_name)
+        )
+        self.writeFormulaToCell(worksheet, "E16", "=E13+E14+E15")
+
+        self.writeFormulaToCell(
+            worksheet,
+            "G8",
+            "=COUNTIFS('{0}'!$D:$D,\">0\",'{0}'!$B:$B,\">=3000\",'{0}'!$B:$B,\"<5000\")".format(
+                base_sheet_name
+            ),
+        )
+        self.writeFormulaToCell(
+            worksheet,
+            "G9",
+            "=COUNTIFS('{0}'!$E:$E,\">.25\",'{0}'!$B:$B,\">=3000\",'{0}'!$B:$B,\"<5000\")".format(
+                base_sheet_name
+            ),
+        )
+        self.writeFormulaToCell(
+            worksheet,
+            "G10",
+            "=COUNTIFS('{0}'!$G:$G,\">.25\",'{0}'!$B:$B,\">=3000\",'{0}'!$B:$B,\"<5000\")".format(
+                base_sheet_name
+            ),
+        )
+        self.writeFormulaToCell(
+            worksheet,
+            "G13",
+            "=COUNTIFS('{0}'!$AX:$AX,\">0\",'{0}'!$B:$B,\">=3000\",'{0}'!$B:$B,\"<5000\")".format(
+                base_sheet_name
+            ),
+        )
+        self.writeFormulaToCell(
+            worksheet,
+            "G14",
+            "=COUNTIFS('{0}'!$AY:$AY,\">0\",'{0}'!$B:$B,\">=3000\",'{0}'!$B:$B,\"<5000\")".format(
+                base_sheet_name
+            ),
+        )
+        self.writeFormulaToCell(
+            worksheet,
+            "G15",
+            "=COUNTIFS('{0}'!$AZ:$AZ,\">0\",'{0}'!$B:$B,\">=3000\",'{0}'!$B:$B,\"<5000\")".format(
+                base_sheet_name
+            ),
+        )
+        self.writeFormulaToCell(worksheet, "G16", "=G13+G14+G15")
