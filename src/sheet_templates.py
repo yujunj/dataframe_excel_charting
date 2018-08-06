@@ -117,8 +117,15 @@ class SheetTemplates(object):
             table_type: 1: Competition Analysis
                         2: Country TAM Analysis-PER
         """
-        cell_format = self.workbook.add_format()
-        cell_format.set_border()
+        border_format = self.workbook.add_format({
+                            'border':1,
+                            'font_size':10
+                           })
+        cell_format = { 'type' : 'no_blanks' , 'format' : border_format}
+        if table_type == 1:
+            worksheet.conditional_format("B5:L11", cell_format)
+        elif table_type == 2:
+            worksheet.conditional_format("B4:K16", cell_format)
             
     def writeFormulaToCell(self, worksheet, cell, formula):
         """Write Formula to Cell
