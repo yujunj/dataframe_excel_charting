@@ -1,0 +1,28 @@
+
+# pattern
+F6 =COUNTIFS(SPACOout!$B:$B,">5000")
+G6 =COUNTIFS(SPACOout!$B:$B,">=3000",SPACOout!$B:$B,"<5000")
+H6 =COUNTIFS(SPACOout!$B:$B,">=1000",SPACOout!$B:$B,"<3000")
+I6 =COUNTIFS(SPACOout!$B:$B,">=500",SPACOout!$B:$B,"<1000")
+J6 =COUNTIFS(SPACOout!$B:$B,">=300",SPACOout!$B:$B,"<500")
+K6 =SUM(G6:J6)
+
+
+C8 =SUM(SPACOout!BD:BD)
+D8 =C8/C$7
+E8 =COUNTIF(SPACOout!BD:BD,">0")
+F8 =COUNTIFS(SPACOout!$D:$D,">5000")
+G8 =COUNTIFS(SPACOout!$D:$D,">0",SPACOout!$B:$B,">=3000",SPACOout!$B:$B,"<5000")
+H8 =COUNTIFS(SPACOout!$D:$D,">0",SPACOout!$B:$B,">=1000",SPACOout!$B:$B,"<3000")
+I8 =COUNTIFS(SPACOout!$D:$D,">0",SPACOout!$B:$B,">=500",SPACOout!$B:$B,"<1000")
+J8 =COUNTIFS(SPACOout!$D:$D,">0",SPACOout!$B:$B,">=300",SPACOout!$B:$B,"<500")
+K8 =SUM(G8:J8)
+
+C9 =SUM(SPACOout!BH:BH)
+D9 =C9/C$7
+E9 =COUNTIFS(SPACOout!$E:$E,">0.25")
+...
+G9 =COUNTIFS(SPACOout!$E:$E,">.25",SPACOout!$B:$B,">=3000",SPACOout!$B:$B,"<5000")
+
+C13 =SUM(SPACOout!BI:BI)
+
