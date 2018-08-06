@@ -180,7 +180,7 @@ class DataFrameExcelCharting(object):
         
         """
         new_df = copy.deepcopy(df)
-        new_df[col_name] = new_df[col_name].apply(trans_func, axis = 1)
+        new_df[col_name] = new_df[col_name].apply(trans_func)
         
         return new_df
         
