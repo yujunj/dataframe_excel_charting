@@ -232,11 +232,11 @@ class SheetTemplates(object):
                            })
         cell_format = { 'type' : 'no_blanks' , 'format' : border_format}
         if table_type == 1:
-            worksheet.conditional_format("B5:L11", cell_format)
+            worksheet.conditional_format("B1:L11", cell_format)
         elif table_type == 2:
-            worksheet.conditional_format("B4:K16", cell_format)
+            worksheet.conditional_format("B1:K16", cell_format)
         elif table_type == 3:
-            worksheet.conditional_format("B4:I25", cell_format)
+            worksheet.conditional_format("B1:I25", cell_format)
             
     def writeFormulaToCell(self, worksheet, cell, formula):
         """Write Formula to Cell
