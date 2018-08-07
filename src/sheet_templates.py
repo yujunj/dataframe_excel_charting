@@ -175,11 +175,11 @@ class SheetTemplates(object):
                 axis=0
             )
             # ninth line of table
-            worksheet.set_row(11, None, None, {'collapsed': 1, 'hidden': True})
+            # worksheet.set_row(11, None, None, {'collapsed': 1, 'hidden': True})
             # tenth to thirteenth line of table
             self.writeStringsToMultipleCells(
                 worksheet, 
-                "B13:B16", 
+                "B12:B15", 
                 ["3G-Only CPOPS", "2G-Only CPOPS", "Uncovered POPs", "Total Opportunity POPs"], 
                 axis=0
             )
@@ -422,8 +422,8 @@ class SheetTemplates(object):
         except AssertionError:
             worksheet = self.createWorkSheet(worksheet_name)
         # write title and note on 1st and 2nd rows
-        self.mergeCellsAndWrite(worksheet, "C1:L1", "COMPETITION ANALYSIS")
-        self.mergeCellsAndWrite(worksheet, "A2:M2", "[SPACO:XXXX]")
+        self.mergeCellsAndWrite(worksheet, "B1:L1", "COMPETITION ANALYSIS")
+        self.mergeCellsAndWrite(worksheet, "B2:L2", "[SPACO:XXXX]")
         # write table frame
         self.writeTableFrame(worksheet, table_type=1)
         # set border
@@ -431,8 +431,8 @@ class SheetTemplates(object):
         # insert formula
         self.writeFormulaToCell(worksheet, "C7", "=SUM('{}'!F2:F8)".format(base_sheet_name))
         
-    def countryTAMAnalysisPER(self, worksheet_name, base_sheet_name):
-        """Country TAM Analysis-PER
+    def countryTAMAnalysis(self, worksheet_name, base_sheet_name, country):
+        """Country TAM Analysis
         
         """
         try:
@@ -440,8 +440,8 @@ class SheetTemplates(object):
         except AssertionError:
             worksheet = self.createWorkSheet(worksheet_name)
         # write title and note on 1st and 2nd rows
-        self.mergeCellsAndWrite(worksheet, "C1:L1", "Country TAM Analysis-PER")
-        self.mergeCellsAndWrite(worksheet, "A2:M2", "[SPACO:XXXX]")
+        self.mergeCellsAndWrite(worksheet, "B1:K1", "Country TAM Analysis-{}".format(country))
+        self.mergeCellsAndWrite(worksheet, "B2:K2", "[SPACO:XXXX]")
         # write table frame
         self.writeTableFrame(worksheet, table_type=2)
         # set border
@@ -450,34 +450,19 @@ class SheetTemplates(object):
         # insert formula sum
         self.writeColumnSum(
             worksheet, 
-            "C7:C11", 
-            ["B", "AS", "AW", "AX", "J"], 
-            base_sheet_name, 
-            axis=0
-        )
-        self.writeColumnSum(
-            worksheet, 
-            "C13:C15", 
-            ["AX", "AY", "AZ"], 
+            "C7:C14", 
+            ["B", "AS", "AW", "AX", "J", "AX", "AY", "AZ"], 
             base_sheet_name, 
             axis=0
         )
         # single cell insert 
-        self.writeFormulaToCell(worksheet, "C16", "=C13+C14+C15")
+        self.writeFormulaToCell(worksheet, "C15", "=C12+C13+C14")
         
         # insert division formula
         self.writeCellDivisionDenomFixed(
             worksheet, 
-            "D8:D11", 
-            ["C8", "C9", "C10", "C11"],
-            "C7", 
-            base_sheet_name, 
-            axis=0
-        )
-        self.writeCellDivisionDenomFixed(
-            worksheet, 
-            "D13:D16", 
-            ["C13", "C14", "C15", "C16"],
+            "D8:D15", 
+            ["C8", "C9", "C10", "C11", "C12", "C13", "C14", "C15"],
             "C7", 
             base_sheet_name, 
             axis=0
@@ -498,7 +483,7 @@ class SheetTemplates(object):
         )
         self.writeColumnCountIfs(
             worksheet, 
-            "E13:E15", 
+            "E12:E14", 
             [{"AV": "=3G"}, 
              {"AU": ">0.25"}, 
              {"D": "<0.25"}], 
@@ -506,7 +491,7 @@ class SheetTemplates(object):
             axis=0
         )
         # single cell insert 
-        self.writeFormulaToCell(worksheet, "E16", "=E13+E14+E15")
+        self.writeFormulaToCell(worksheet, "E15", "=E12+E13+E14")
         # insert countifs
         self.writeColumnCountIfs(
             worksheet, 
@@ -519,7 +504,7 @@ class SheetTemplates(object):
         )
         self.writeColumnCountIfs(
             worksheet, 
-            "G13:G15", 
+            "G12:G14", 
             [{"AX": ">0", "B": [">=3000", "<5000"]}, 
              {"AY": ">0", "B": [">=3000", "<5000"]}, 
              {"AZ": ">0", "B": [">=3000", "<5000"]}], 
@@ -536,8 +521,8 @@ class SheetTemplates(object):
         except AssertionError:
             worksheet = self.createWorkSheet(worksheet_name)
         # write title and note on 1st and 2nd rows
-        self.mergeCellsAndWrite(worksheet, "E1:I1", "Network Analysis: Partner = {}".format(partner_name))
-        self.mergeCellsAndWrite(worksheet, "A2:M2", "[SPACO:XXXX]")
+        self.mergeCellsAndWrite(worksheet, "B1:I1", "Network Analysis: Partner = {}".format(partner_name))
+        self.mergeCellsAndWrite(worksheet, "B2:I2", "[SPACO:XXXX]")
         # write table frame
         self.writeTableFrame(worksheet, table_type=3)
         # set border
