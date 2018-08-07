@@ -259,6 +259,19 @@ class SheetTemplates(object):
                 {"AZ": ">0", "B": [">=3000", "<5000"]}, 
                 {"A": "<10", "C": "<10"}
             ]
+            
+        Usage:
+            self.writeColumnCountIfs(
+                worksheet, 
+                "G8:G10", 
+                [
+                    {"D": ">0", "B": [">=3000", "<5000"]},
+                    {"E": ">.25", "B": [">=3000", "<5000"]}, 
+                    {"G": ">.25", "B": [">=3000", "<5000"]}
+                ], 
+                base_sheet_name, 
+                axis=0
+            )
         
         """
         # get number from cell range
