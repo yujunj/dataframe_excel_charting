@@ -5,6 +5,7 @@ Created on Aug 5, 2018
 '''
 # import xlsxwriter
 from xlsxwriter import worksheet
+from xlsxwriter import utility 
 
 class SheetTemplates(object):
     '''
@@ -102,7 +103,7 @@ class SheetTemplates(object):
             # eighth line of table
             worksheet.write_string("B11", "Total Fixed/WIFI CPOPS")
             # ninth line of table
-            worksheet.set_row(12, None, None, {'collapsed': 1, 'hidden': True})
+            worksheet.set_row(11, None, None, {'collapsed': 1, 'hidden': True})
             # tenth line of table
             worksheet.write_string("B13", "3G-Only CPOPS")
             # eleventh line of table
@@ -177,6 +178,115 @@ class SheetTemplates(object):
         """
         worksheet.write_formula(cell, formula)
         
+    def getNumberFromCellsRange(self,cell_range):
+        """Get Number from Cells Range
+        
+        Args:
+            cell_range: "B2:B10"
+        
+        Returns:
+            tuple(int, int):
+            (start_row, start_col), (end_row, end_col)
+            
+        """
+        # parce the cell range input
+        start_cell, end_cell = cell_range.split(":")
+        (start_row, start_col) = utility.xl_cell_to_rowcol(start_cell)
+        (end_row, end_col) = utility.xl_cell_to_rowcol(end_cell)
+        return (start_row, start_col), (end_row, end_col)
+        
+    def writeColumnSum(self, worksheet, cell_range, columns_list, base_sheet_name, axis=0):
+        """Write Column Sum
+        
+        Args:
+            cell_range: "B2:B10"
+            columns_list: ["B", "AS"]
+            axis: 
+                0 means write to next row first (default)
+                1 means write to next column first
+            
+        Usage:
+            self.writeColumnSum(
+                worksheet, "C7:C8", ["B", "AS"], "data_sheet"
+            )
+        
+        """
+        # get number from cell range
+        (start_row, start_col), (end_row, end_col) = self.getNumberFromCellsRange(cell_range)
+        # column counter
+        i = 0
+        # write to next row first
+        if axis == 0:
+            for col in range(start_col, end_col + 1):
+                for row in range(start_row, end_row + 1):
+                    cell = utility.xl_rowcol_to_cell(row, col)
+                    formula = "=SUM('{0}'!{1}:{1})".format(base_sheet_name, columns_list[i])
+                    self.writeFormulaToCell(worksheet, cell, formula)
+                    i += 1
+        # write to next column first
+        elif axis == 1:
+            for row in range(start_row, end_row + 1):
+                for col in range(start_col, end_col + 1):
+                    cell = utility.xl_rowcol_to_cell(row, col)
+                    formula = "=SUM('{0}'!{1}:{1})".format(base_sheet_name, columns_list[i])
+                    self.writeFormulaToCell(worksheet, cell, formula)
+                    i += 1
+                    
+    def formatCountIfsCondition(self, column_criterion, base_sheet_name):
+        """format count ifs condition
+        
+        Args:
+            column_criteria = [
+                {"AZ": ">0", "B": [">=3000", "<5000"]}, 
+                {"A": "<10", "C": "<10"}
+            ]
+        """
+        condition_list = []
+        for key in column_criterion.keys():
+            if isinstance(column_criterion[key], list):
+                temp_str = map(lambda x: "'{0}'!${1}:${1},\"{2}\"".format(base_sheet_name, key, x), column_criterion[key])
+                condition_list.extend(temp_str)
+            else:
+                temp_str = "'{0}'!${1}:${1},\"{2}\"".format(base_sheet_name, key, column_criterion[key])
+                condition_list.append(temp_str)
+        return ",".join(condition_list)
+
+    def writeColumnCountIfs(self, worksheet, cell_range, columns_criteria, base_sheet_name, axis=0):
+        """Write Column Count IFs
+        
+        Args:
+            column_criteria = [
+                {"AZ": ">0", "B": [">=3000", "<5000"]}, 
+                {"A": "<10", "C": "<10"}
+            ]
+        
+        """
+        # get number from cell range
+        (start_row, start_col), (end_row, end_col) = self.getNumberFromCellsRange(cell_range)
+        # loop through the column criteria
+        i = 0
+        # write to next row first
+        if axis == 0:
+            for col in range(start_col, end_col + 1):
+                for row in range(start_row, end_row + 1):
+                    column_criterion = columns_criteria[i]
+                    cell = utility.xl_rowcol_to_cell(row, col)
+                    # get condition string
+                    condition = self.formatCountIfsCondition(column_criterion, base_sheet_name)
+                    formula = "=COUNTIFS({})".format(condition)
+                    self.writeFormulaToCell(worksheet, cell, formula)
+                    i += 1
+        elif axis == 1:
+            for row in range(start_row, end_row + 1):
+                for col in range(start_col, end_col + 1):
+                    column_criterion = columns_criteria[i]
+                    cell = utility.xl_rowcol_to_cell(row, col)
+                    # get condition string
+                    condition = self.formatCountIfsCondition(column_criterion, base_sheet_name)
+                    formula = "=COUNTIFS({})".format(condition)
+                    self.writeFormulaToCell(worksheet, cell, formula)
+                    i += 1
+        
     def competitionAnalysis(self, worksheet_name, base_sheet_name):
         """Competition Analysis
         
@@ -210,8 +320,39 @@ class SheetTemplates(object):
         self.writeTableFrame(worksheet, table_type=2)
         # set border
         self.setTableBorder(worksheet, table_type=2)
-        # insert formula
-        self.writeFormulaToCell(worksheet, "C6", "=SUM('{}'!F2:F8)".format(base_sheet_name))
+        # insert formula sum
+        self.writeColumnSum(worksheet, "C7:C11", ["B", "AS", "AW", "AX", "J"], base_sheet_name, axis=0)
+        self.writeColumnSum(worksheet, "C13:C15", ["AX", "AY", "AZ"], base_sheet_name, axis=0)
+        # insert formula countifs
+        self.writeColumnCountIfs(worksheet, 
+                                 "E8:E10", 
+                                 [{"AS": ">0"}, 
+                                  {"E": ">0.25"}, 
+                                  {"G": "0.25"}], 
+                                 base_sheet_name, 
+                                 axis=0)
+        self.writeColumnCountIfs(worksheet, 
+                                 "E13:E15", 
+                                 [{"AV": "=3G"}, 
+                                  {"AU": ">0.25"}, 
+                                  {"D": "<0.25"}], 
+                                 base_sheet_name, 
+                                 axis=0)
+        self.writeFormulaToCell(worksheet, "E16", "=E13+E14+E15")
+        self.writeColumnCountIfs(worksheet, 
+                                 "G8:G10", 
+                                 [{"D": ">0", "B": [">=3000", "<5000"]},
+                                  {"E": ">.25", "B": [">=3000", "<5000"]}, 
+                                  {"G": ">.25", "B": [">=3000", "<5000"]}], 
+                                 base_sheet_name, 
+                                 axis=0)
+        self.writeColumnCountIfs(worksheet, 
+                                 "G13:G15", 
+                                 [{"AX": ">0", "B": [">=3000", "<5000"]}, 
+                                  {"AY": ">0", "B": [">=3000", "<5000"]}, 
+                                  {"AZ": ">0", "B": [">=3000", "<5000"]}], 
+                                 base_sheet_name, 
+                                 axis=0)
         
     def networkAnalysis(self, worksheet_name, base_sheet_name, partner_name):
         """Network Analysis
