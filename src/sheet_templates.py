@@ -51,6 +51,82 @@ class SheetTemplates(object):
         # merge the first row from C1 to L1 and write title to it
         worksheet.merge_range(cell_range, title, merge_format)
         
+    def writeStringsToMultipleCells(self, worksheet, cell_range, input_strings_list, axis=0):
+        """write Strings to Multiple Cells
+        
+        Args:
+            cell_range: "A1:A10"
+            input_strings_list: ["asd", "awasd", ..., "nju"]
+            axis: 
+                0 means write to next row first (default)
+                1 means write to next column first
+            
+        Usage:
+            self.writeStringsToMultipleCells(
+                worksheet, 
+                "C6:G6", 
+                ["Total CPOPs", "4G", "3G+4G", "2G Only", "Unconnected"], 
+                axis=1
+            )
+        
+        """
+        # get number from cell range
+        (start_row, start_col), (end_row, end_col) = self.getNumberFromCellsRange(cell_range)
+        # strings counter 
+        i = 0
+        # next row first
+        if axis == 0:
+            for col in range(start_col, end_col + 1):
+                for row in range(start_row, end_row + 1):
+                    cell = utility.xl_rowcol_to_cell(row, col)
+                    worksheet.write_string(cell, input_strings_list[i])
+                    i += 1
+        # next column first
+        elif axis == 1:
+            for row in range(start_row, end_row + 1):
+                for col in range(start_col, end_col + 1):
+                    cell = utility.xl_rowcol_to_cell(row, col)
+                    worksheet.write_string(cell, input_strings_list[i])
+                    i += 1
+    
+    def writeNumbersToMultipleCells(self, worksheet, cell_range, input_numbers_list, axis=0):
+        """write Numbers to Multiple Cells
+        
+        Args:
+            cell_range: "A1:A10"
+            input_numbers_list: [0, 1, ..., 10]
+            axis: 
+                0 means write to next row first (default)
+                1 means write to next column first
+            
+        Usage:
+            self.writeStringsToMultipleCells(
+                worksheet, 
+                "C6:G6", 
+                ["Total CPOPs", "4G", "3G+4G", "2G Only", "Unconnected"], 
+                axis=1
+            )
+        
+        """
+        # get number from cell range
+        (start_row, start_col), (end_row, end_col) = self.getNumberFromCellsRange(cell_range)
+        # strings counter 
+        i = 0
+        # next row first
+        if axis == 0:
+            for col in range(start_col, end_col + 1):
+                for row in range(start_row, end_row + 1):
+                    cell = utility.xl_rowcol_to_cell(row, col)
+                    worksheet.write_string(cell, input_numbers_list[i])
+                    i += 1
+        # next column first
+        elif axis == 1:
+            for row in range(start_row, end_row + 1):
+                for col in range(start_col, end_col + 1):
+                    cell = utility.xl_rowcol_to_cell(row, col)
+                    worksheet.write_string(cell, input_numbers_list[i])
+                    i += 1
+    
     def writeTableFrame(self, worksheet, table_type):
         """Write Table Frame
         
@@ -66,91 +142,81 @@ class SheetTemplates(object):
             self.mergeCellsAndWrite(worksheet, "C5:G5", "Pops")
             self.mergeCellsAndWrite(worksheet, "H5:L5", "Settlements")
             # second line of table
-            worksheet.write_string("C6", "Total CPOPs")
-            worksheet.write_string("D6", "4G")
-            worksheet.write_string("E6", "3G+4G")
-            worksheet.write_string("F6", "2G Only")
-            worksheet.write_string("G6", "Unconnected")
-            worksheet.write_string("H6", "Total")
-            worksheet.write_string("I6", "4G")
-            worksheet.write_string("J6", "3G+4G")
-            worksheet.write_string("K6", "2G Only")
-            worksheet.write_string("L6", "Unconnected")
+            self.writeStringsToMultipleCells(
+                worksheet, 
+                "C6:G6", 
+                ["Total CPOPs", "4G", "3G+4G", "2G Only", "Unconnected"], 
+                axis=1
+            )
+            self.writeStringsToMultipleCells(
+                worksheet, 
+                "H6:L6", 
+                ["Total", "4G", "3G+4G", "2G Only", "Unconnected"], 
+                axis=1
+            )
         elif table_type == 2:
             # first line of table
             self.mergeCellsAndWrite(worksheet, "C4:D4", "PER")
             self.mergeCellsAndWrite(worksheet, "E4:K4", "Settlements")
             # second line of table
-            worksheet.write_string("C5", "Population")
-            worksheet.write_string("D5", "%")
-            worksheet.write_string("E5", "Total")
-            worksheet.write_string("F5", "5000+")
-            worksheet.write_string("G5", "3000->5000")
-            worksheet.write_string("H5", "1000->3000")
-            worksheet.write_string("I5", "500->1000")
-            worksheet.write_string("J5", "300->500")
-            worksheet.write_string("K5", "300->5000")
-            # third line of table
-            worksheet.write_string("B6", "Total Count")
-            # fourth line of table
-            worksheet.write_string("B7", "Total Pops")
-            # fifth line of table
-            worksheet.write_string("B8", "Existing CPOPS")
-            # sixth line of table
-            worksheet.write_string("B9", "Total 4G CPOPS")
-            # seventh line of table
-            worksheet.write_string("B10", "Total 3G CPOPS")
-            # eighth line of table
-            worksheet.write_string("B11", "Total Fixed/WIFI CPOPS")
+            self.writeStringsToMultipleCells(
+                worksheet, 
+                "C5:K5", 
+                ["Population", "%", "Total", "5000+", "3000->5000", 
+                 "1000->3000", "500->1000", "300->500", "300->5000"], 
+                axis=1
+            )
+            # third to eighth line of table
+            self.writeStringsToMultipleCells(
+                worksheet, 
+                "B6:B11", 
+                ["Total Count", "Total Pops", "Existing CPOPS", 
+                 "Total 4G CPOPS", "Total 3G CPOPS", "Total Fixed/WIFI CPOPS"], 
+                axis=0
+            )
             # ninth line of table
             worksheet.set_row(11, None, None, {'collapsed': 1, 'hidden': True})
-            # tenth line of table
-            worksheet.write_string("B13", "3G-Only CPOPS")
-            # eleventh line of table
-            worksheet.write_string("B14", "2G-Only CPOPS")
-            # twelfth line of table
-            worksheet.write_string("B15", "Uncovered POPs")
-            # thirteenth line of table
-            worksheet.write_string("B16", "Total Opportunity POPs")
+            # tenth to thirteenth line of table
+            self.writeStringsToMultipleCells(
+                worksheet, 
+                "B13:B16", 
+                ["3G-Only CPOPS", "2G-Only CPOPS", "Uncovered POPs", "Total Opportunity POPs"], 
+                axis=0
+            )
         elif table_type == 3:
             # first line of table
-            worksheet.write_string("B4", "Capex/cpop Summary")
-            worksheet.write_string("C4", "Total")
-            worksheet.write_string("D4", "<$10/cpop")
-            worksheet.write_string("E4", "$10<$20/cpop")
-            worksheet.write_string("F4", "$20<$40/cpop")
-            worksheet.write_string("G4", "$40<$60/cpop")
-            worksheet.write_string("H4", "$60<$80/cpop")
-            worksheet.write_string("I4", ">$80/cpop")
+            self.writeStringsToMultipleCells(
+                worksheet, 
+                "B4:I4", 
+                ["Capex/cpop Summary", "Total", "<$10/cpop", "$10<$20/cpop", "$20<$40/cpop", 
+                 "$40<$60/cpop", "$60<$80/cpop", ">$80/cpop"], 
+                axis=1
+            )
             # second to thirteen line of table
-            suffixes = ["Opportunity POPs", "RAN CPOPs", "Sites"]
-            categories = ["Total", "Greenfield", "2G Overlay", "3G Overlay"]
-            row = 5
-            for suffix in suffixes:
-                for category in categories:
-                    worksheet.write_string("B{0}".format(row), "{0} {1}".format(category, suffix))
-                    row += 1
+            self.writeStringsToMultipleCells(
+                worksheet, 
+                "B5:B16", 
+                ['Total Opportunity POPs', 'Greenfield Opportunity POPs', '2G Overlay Opportunity POPs', '3G Overlay Opportunity POPs', 
+                 'Total RAN CPOPs', 'Greenfield RAN CPOPs', '2G Overlay RAN CPOPs', '3G Overlay RAN CPOPs', 
+                 'Total Sites', 'Greenfield Sites', '2G Overlay Sites', '3G Overlay Sites'], 
+                axis=0
+            )
             # fourteenth to eighteenth line of table
-            worksheet.write_string("B{}".format(row), "Capex/cpop")
-            row += 1
-            worksheet.write_string("B{}".format(row), "Capex/site")
-            row += 1
-            suffixes = ["Capex/site"]
-            categories = ["Greenfield", "2G Overlay", "3G Overlay"]
-            for suffix in suffixes:
-                for category in categories:
-                    worksheet.write_string("B{0}".format(row), "{0} {1}".format(category, suffix))
-                    row += 1
+            self.writeStringsToMultipleCells(
+                worksheet, 
+                "B17:B21", 
+                ["Capex/cpop", "Capex/site", 
+                 "Greenfield Capex/site", "2G Overlay Capex/site", "3G Overlay Capex/site"], 
+                axis=0
+            )
             # ninteenth to 22th line of table
-            worksheet.write_string("B{}".format(row), "Total CapEx")
-            row += 1
-            prefixes = ["Total CapEx"]
-            categories = ["Greenfield Sites", "2G Overlay", "3G Overlay"]
-            for prefix in prefixes:
-                for category in categories:
-                    worksheet.write_string("B{0}".format(row), "{0}- {1}".format(prefix, category))
-                    row += 1
-            
+            self.writeStringsToMultipleCells(
+                worksheet, 
+                "B22:B25", 
+                ["Total CapEx", "Total CapEx- Greenfield Sites", "Total CapEx- 2G Overlay", "Total CapEx- 3G Overlay"], 
+                axis=0
+            )
+
     def setTableBorder(self, worksheet, table_type):
         """Set Table Border
         
@@ -255,10 +321,14 @@ class SheetTemplates(object):
         """Write Column Count IFs
         
         Args:
-            column_criteria = [
+            cell_range: "A1:D2"
+            column_criteria: [
                 {"AZ": ">0", "B": [">=3000", "<5000"]}, 
                 {"A": "<10", "C": "<10"}
             ]
+            axis: 
+                0 means write to next row first (default)
+                1 means write to next column first
             
         Usage:
             self.writeColumnCountIfs(
@@ -289,6 +359,7 @@ class SheetTemplates(object):
                     formula = "=COUNTIFS({})".format(condition)
                     self.writeFormulaToCell(worksheet, cell, formula)
                     i += 1
+        # write to next column first
         elif axis == 1:
             for row in range(start_row, end_row + 1):
                 for col in range(start_col, end_col + 1):
@@ -299,7 +370,49 @@ class SheetTemplates(object):
                     formula = "=COUNTIFS({})".format(condition)
                     self.writeFormulaToCell(worksheet, cell, formula)
                     i += 1
+                    
+    def writeCellDivisionDenomFixed(self, worksheet, cell_range, numer_list, denom_cell, base_sheet_name, axis=0):
+        """Write Column Division, Fixed Denominator
         
+        Args:
+            cell_range: "A1:A10"
+            numer_list: ["B1", "C2", ..., "H10"]
+            denom_cell: "C7"
+            axis: 
+                0 means write to next row first (default)
+                1 means write to next column first
+        
+        Usage:
+            self.writeCellDivisionDenomFixed(
+                worksheet, 
+                "A1:A3", 
+                ["B1", "B2", "B3"],
+                "C8", 
+                "data sheet", 
+                axis=0
+            )
+        """
+        # get number from cell range
+        (start_row, start_col), (end_row, end_col) = self.getNumberFromCellsRange(cell_range)
+        # loop through the numer list
+        i = 0
+        # write to next row first
+        if axis == 0:
+            for col in range(start_col, end_col + 1):
+                for row in range(start_row, end_row + 1):
+                    cell = utility.xl_rowcol_to_cell(row, col)
+                    formula = "='{0}'!{1}/'{0}'!{2}".format(base_sheet_name, numer_list[i], denom_cell)
+                    self.writeFormulaToCell(worksheet, cell, formula)
+                    i += 1
+        # write to next column first
+        elif axis == 1:
+            for row in range(start_row, end_row + 1):
+                for col in range(start_col, end_col + 1):
+                    cell = utility.xl_rowcol_to_cell(row, col)
+                    formula = "='{0}'!{1}/'{0}'!{2}".format(base_sheet_name, numer_list[i], denom_cell)
+                    self.writeFormulaToCell(worksheet, cell, formula)
+                    i += 1
+            
     def competitionAnalysis(self, worksheet_name, base_sheet_name):
         """Competition Analysis
         
@@ -333,39 +446,86 @@ class SheetTemplates(object):
         self.writeTableFrame(worksheet, table_type=2)
         # set border
         self.setTableBorder(worksheet, table_type=2)
+        
         # insert formula sum
-        self.writeColumnSum(worksheet, "C7:C11", ["B", "AS", "AW", "AX", "J"], base_sheet_name, axis=0)
-        self.writeColumnSum(worksheet, "C13:C15", ["AX", "AY", "AZ"], base_sheet_name, axis=0)
+        self.writeColumnSum(
+            worksheet, 
+            "C7:C11", 
+            ["B", "AS", "AW", "AX", "J"], 
+            base_sheet_name, 
+            axis=0
+        )
+        self.writeColumnSum(
+            worksheet, 
+            "C13:C15", 
+            ["AX", "AY", "AZ"], 
+            base_sheet_name, 
+            axis=0
+        )
+        # single cell insert 
+        self.writeFormulaToCell(worksheet, "C16", "=C13+C14+C15")
+        
+        # insert division formula
+        self.writeCellDivisionDenomFixed(
+            worksheet, 
+            "D8:D11", 
+            ["C8", "C9", "C10", "C11"],
+            "C7", 
+            base_sheet_name, 
+            axis=0
+        )
+        self.writeCellDivisionDenomFixed(
+            worksheet, 
+            "D13:D16", 
+            ["C13", "C14", "C15", "C16"],
+            "C7", 
+            base_sheet_name, 
+            axis=0
+        )
+        # single column
+        self.writeFormulaToCell(
+            worksheet, "E6", "=COUNTA('{}'!A:A)-1".format(base_sheet_name)
+        )
         # insert formula countifs
-        self.writeColumnCountIfs(worksheet, 
-                                 "E8:E10", 
-                                 [{"AS": ">0"}, 
-                                  {"E": ">0.25"}, 
-                                  {"G": "0.25"}], 
-                                 base_sheet_name, 
-                                 axis=0)
-        self.writeColumnCountIfs(worksheet, 
-                                 "E13:E15", 
-                                 [{"AV": "=3G"}, 
-                                  {"AU": ">0.25"}, 
-                                  {"D": "<0.25"}], 
-                                 base_sheet_name, 
-                                 axis=0)
+        self.writeColumnCountIfs(
+            worksheet, 
+            "E8:E10", 
+            [{"AS": ">0"}, 
+             {"E": ">0.25"}, 
+             {"G": "0.25"}], 
+            base_sheet_name, 
+            axis=0
+        )
+        self.writeColumnCountIfs(
+            worksheet, 
+            "E13:E15", 
+            [{"AV": "=3G"}, 
+             {"AU": ">0.25"}, 
+             {"D": "<0.25"}], 
+            base_sheet_name, 
+            axis=0
+        )
+        # single cell insert 
         self.writeFormulaToCell(worksheet, "E16", "=E13+E14+E15")
-        self.writeColumnCountIfs(worksheet, 
-                                 "G8:G10", 
-                                 [{"D": ">0", "B": [">=3000", "<5000"]},
-                                  {"E": ">.25", "B": [">=3000", "<5000"]}, 
-                                  {"G": ">.25", "B": [">=3000", "<5000"]}], 
-                                 base_sheet_name, 
-                                 axis=0)
-        self.writeColumnCountIfs(worksheet, 
-                                 "G13:G15", 
-                                 [{"AX": ">0", "B": [">=3000", "<5000"]}, 
-                                  {"AY": ">0", "B": [">=3000", "<5000"]}, 
-                                  {"AZ": ">0", "B": [">=3000", "<5000"]}], 
-                                 base_sheet_name, 
-                                 axis=0)
+        # insert countifs
+        self.writeColumnCountIfs(
+            worksheet, 
+            "G8:G10", 
+            [{"D": ">0", "B": [">=3000", "<5000"]},
+             {"E": ">.25", "B": [">=3000", "<5000"]}, 
+             {"G": ">.25", "B": [">=3000", "<5000"]}], 
+            base_sheet_name, 
+            axis=0
+        )
+        self.writeColumnCountIfs(
+            worksheet, 
+            "G13:G15", 
+            [{"AX": ">0", "B": [">=3000", "<5000"]}, 
+             {"AY": ">0", "B": [">=3000", "<5000"]}, 
+             {"AZ": ">0", "B": [">=3000", "<5000"]}], 
+            base_sheet_name, 
+            axis=0
+        )
         
     def networkAnalysis(self, worksheet_name, base_sheet_name, partner_name):
         """Network Analysis
