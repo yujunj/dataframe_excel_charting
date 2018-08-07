@@ -51,8 +51,8 @@ class SheetTemplates(object):
         # merge the first row from C1 to L1 and write title to it
         worksheet.merge_range(cell_range, title, merge_format)
         
-    def writeStringsToMultipleCells(self, worksheet, cell_range, input_strings_list, axis=0):
-        """write Strings to Multiple Cells
+    def writeToMultipleCells(self, worksheet, cell_range, input_list, input_type, axis=0):
+        """write to Multiple Cells
         
         Args:
             cell_range: "A1:A10"
@@ -62,48 +62,18 @@ class SheetTemplates(object):
                 1 means write to next column first
             
         Usage:
-            self.writeStringsToMultipleCells(
+            self.writeToMultipleCells(
                 worksheet, 
                 "C6:G6", 
                 ["Total CPOPs", "4G", "3G+4G", "2G Only", "Unconnected"], 
+                "string",
                 axis=1
             )
-        
-        """
-        # get number from cell range
-        (start_row, start_col), (end_row, end_col) = self.getNumberFromCellsRange(cell_range)
-        # strings counter 
-        i = 0
-        # next row first
-        if axis == 0:
-            for col in range(start_col, end_col + 1):
-                for row in range(start_row, end_row + 1):
-                    cell = utility.xl_rowcol_to_cell(row, col)
-                    worksheet.write_string(cell, input_strings_list[i])
-                    i += 1
-        # next column first
-        elif axis == 1:
-            for row in range(start_row, end_row + 1):
-                for col in range(start_col, end_col + 1):
-                    cell = utility.xl_rowcol_to_cell(row, col)
-                    worksheet.write_string(cell, input_strings_list[i])
-                    i += 1
-    
-    def writeNumbersToMultipleCells(self, worksheet, cell_range, input_numbers_list, axis=0):
-        """write Numbers to Multiple Cells
-        
-        Args:
-            cell_range: "A1:A10"
-            input_numbers_list: [0, 1, ..., 10]
-            axis: 
-                0 means write to next row first (default)
-                1 means write to next column first
-            
-        Usage:
-            self.writeNumbersToMultipleCells(
+            self.writeToMultipleCells(
                 worksheet, 
                 "C6:G6", 
                 [1, 2, 3, ..., 10], 
+                "number",
                 axis=1
             )
         
@@ -117,14 +87,24 @@ class SheetTemplates(object):
             for col in range(start_col, end_col + 1):
                 for row in range(start_row, end_row + 1):
                     cell = utility.xl_rowcol_to_cell(row, col)
-                    worksheet.write_number(cell, input_numbers_list[i])
+                    if input_type == "string":
+                        worksheet.write_string(cell, input_list[i])
+                    elif input_type == "number":
+                        worksheet.write_number(cell, input_list[i])
+                    else:
+                        assert input_type in ["string", "number"], "Please choose from 'string' or 'number' as input_type"
                     i += 1
         # next column first
         elif axis == 1:
             for row in range(start_row, end_row + 1):
                 for col in range(start_col, end_col + 1):
                     cell = utility.xl_rowcol_to_cell(row, col)
-                    worksheet.write_number(cell, input_numbers_list[i])
+                    if input_type == "string":
+                        worksheet.write_string(cell, input_list[i])
+                    elif input_type == "number":
+                        worksheet.write_number(cell, input_list[i])
+                    else:
+                        assert input_type in ["string", "number"], "Please choose from 'string' or 'number' as input_type"
                     i += 1
     
     def writeTableFrame(self, worksheet, table_type):
@@ -142,16 +122,18 @@ class SheetTemplates(object):
             self.mergeCellsAndWrite(worksheet, "C5:G5", "Pops")
             self.mergeCellsAndWrite(worksheet, "H5:L5", "Settlements")
             # second line of table
-            self.writeStringsToMultipleCells(
+            self.writeToMultipleCells(
                 worksheet, 
                 "C6:G6", 
                 ["Total CPOPs", "4G", "3G+4G", "2G Only", "Unconnected"], 
+                "string",
                 axis=1
             )
-            self.writeStringsToMultipleCells(
+            self.writeToMultipleCells(
                 worksheet, 
                 "H6:L6", 
                 ["Total", "4G", "3G+4G", "2G Only", "Unconnected"], 
+                "string",
                 axis=1
             )
         elif table_type == 2:
@@ -159,61 +141,68 @@ class SheetTemplates(object):
             self.mergeCellsAndWrite(worksheet, "C4:D4", "PER")
             self.mergeCellsAndWrite(worksheet, "E4:K4", "Settlements")
             # second line of table
-            self.writeStringsToMultipleCells(
+            self.writeToMultipleCells(
                 worksheet, 
                 "C5:K5", 
                 ["Population", "%", "Total", "5000+", "3000->5000", 
                  "1000->3000", "500->1000", "300->500", "300->5000"], 
+                "string", 
                 axis=1
             )
             # third to eighth line of table
-            self.writeStringsToMultipleCells(
+            self.writeToMultipleCells(
                 worksheet, 
                 "B6:B11", 
                 ["Total Count", "Total Pops", "Existing CPOPS", 
                  "Total 4G CPOPS", "Total 3G CPOPS", "Total Fixed/WIFI CPOPS"], 
+                "string",
                 axis=0
             )
             # ninth line of table
             # worksheet.set_row(11, None, None, {'collapsed': 1, 'hidden': True})
             # tenth to thirteenth line of table
-            self.writeStringsToMultipleCells(
+            self.writeToMultipleCells(
                 worksheet, 
                 "B12:B15", 
                 ["3G-Only CPOPS", "2G-Only CPOPS", "Uncovered POPs", "Total Opportunity POPs"], 
+                "string",
                 axis=0
             )
         elif table_type == 3:
             # first line of table
-            self.writeStringsToMultipleCells(
+            self.writeToMultipleCells(
                 worksheet, 
                 "B4:I4", 
                 ["Capex/cpop Summary", "Total", "<$10/cpop", "$10<$20/cpop", "$20<$40/cpop", 
                  "$40<$60/cpop", "$60<$80/cpop", ">$80/cpop"], 
+                "string",
                 axis=1
             )
             # second to thirteen line of table
-            self.writeStringsToMultipleCells(
+            self.writeToMultipleCells(
                 worksheet, 
                 "B5:B16", 
                 ['Total Opportunity POPs', 'Greenfield Opportunity POPs', '2G Overlay Opportunity POPs', '3G Overlay Opportunity POPs', 
                  'Total RAN CPOPs', 'Greenfield RAN CPOPs', '2G Overlay RAN CPOPs', '3G Overlay RAN CPOPs', 
                  'Total Sites', 'Greenfield Sites', '2G Overlay Sites', '3G Overlay Sites'], 
+                "string",
                 axis=0
             )
             # fourteenth to eighteenth line of table
-            self.writeStringsToMultipleCells(
+            self.writeToMultipleCells(
                 worksheet, 
                 "B17:B21", 
                 ["Capex/cpop", "Capex/site", 
                  "Greenfield Capex/site", "2G Overlay Capex/site", "3G Overlay Capex/site"], 
+                "string",
                 axis=0
             )
             # ninteenth to 22th line of table
-            self.writeStringsToMultipleCells(
+            self.writeToMultipleCells(
                 worksheet, 
                 "B22:B25", 
-                ["Total CapEx", "Total CapEx- Greenfield Sites", "Total CapEx- 2G Overlay", "Total CapEx- 3G Overlay"], 
+                ["Total CapEx", "Total CapEx- Greenfield Sites", "Total CapEx- 2G Overlay", "Total CapEx- 3G Overlay"],
+                "string", 
                 axis=0
             )
 
