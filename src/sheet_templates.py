@@ -100,10 +100,10 @@ class SheetTemplates(object):
                 1 means write to next column first
             
         Usage:
-            self.writeStringsToMultipleCells(
+            self.writeNumbersToMultipleCells(
                 worksheet, 
                 "C6:G6", 
-                ["Total CPOPs", "4G", "3G+4G", "2G Only", "Unconnected"], 
+                [1, 2, 3, ..., 10], 
                 axis=1
             )
         
@@ -117,14 +117,14 @@ class SheetTemplates(object):
             for col in range(start_col, end_col + 1):
                 for row in range(start_row, end_row + 1):
                     cell = utility.xl_rowcol_to_cell(row, col)
-                    worksheet.write_string(cell, input_numbers_list[i])
+                    worksheet.write_number(cell, input_numbers_list[i])
                     i += 1
         # next column first
         elif axis == 1:
             for row in range(start_row, end_row + 1):
                 for col in range(start_col, end_col + 1):
                     cell = utility.xl_rowcol_to_cell(row, col)
-                    worksheet.write_string(cell, input_numbers_list[i])
+                    worksheet.write_number(cell, input_numbers_list[i])
                     i += 1
     
     def writeTableFrame(self, worksheet, table_type):
