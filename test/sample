@@ -1,0 +1,51 @@
+import pandas as pd
+df = pd.DataFrame(columns=['key','pct','brand', 'settlement_id', 'POP'])
+df.loc[0] = ['ALL|2G',	1,	'Movistar',	'PER_5_216:1',960.03030000001]
+df.loc[1] = ['wifi',	0.29289940828402,	'Movistar',	'PER_5_216:1',281.19230680474]
+df.loc[2] = ['ALL|2G',	1,	'Entel',	'PER_5_216:1',	960.03030000001]
+df.loc[3] = ['ALL|3G',	1,	'Entel',	'PER_5_216:1',	960.03030000001]
+df.loc[4] = ['wifi',	0.29289940828402,	'Entel',	'PER_5_216:1',	281.19230680474]
+df.loc[5] = ['716.17|3G',	0.29289940828402,	'Entel',	'PER_5_216:1',	281.19230680474]
+# add cvg_status col
+d = {4: '4G', 3: '3G', 2: '2G', 1: 'Uncovered', 0: 'None'}
+def create_new_col_names(row, is_pop=False):
+    tag = '_Pct'
+    if is_pop:
+        tag = '_Pop'
+    if row['key'] == 'wifi':
+        return 'wifi'
+    elif row['key'] in ('ALL|ALL', 'ALL|4G', 'ALL|3G', 'ALL|2G'):
+        return "ALL_" + row['key'][-2:] + tag
+    else:
+        return row['brand'] + "_" + row['key'][-2:] + tag    
+def get_cvg_status(pop_type, pct, cvg_threshold=0.25):
+    if pop_type == 'ALL|4G' and pct >= cvg_threshold:
+        return 4
+    elif pop_type == 'ALL|3G' and pct >= cvg_threshold:
+        return 3
+    elif pop_type == 'ALL|2G' and pct >= cvg_threshold:
+        return 2
+    elif pop_type in ('ALL|4G', 'ALL|3G', 'ALL|2G'):
+        return 1
+    else:
+        return 0
+dict = {'ALL|ALL', 'ALL|4G', 'ALL|3G', 'ALL|2G'}
+# df['cvg_status'] = df.apply(lambda row: get_cvg_status(row['key'], row['pct']), axis=1) 
+df["name_coverage_col"] = df.apply(lambda row: create_new_col_names(row), axis=1)
+df["name_pop_col"] = df.apply(lambda row: create_new_col_names(row, True), axis=1)
+type_list = ['ALL', '4G', '3G', '2G']
+# i.e: ['Movistar' 'Entel']
+partner_name_list = df['brand'].unique()
+# new_cols example: 
+#['Movistar_ALL', 'Movistar_ALL_Pop', 'Movistar_4G',...]
+new_cols = list(itertools.chain.from_iterable([[a + '_' + b, a + '_' + b + '_Pop'
+                ] for (a, b) in  itertools.product(
+                    partner_name_list, type_list
+                 )
+            ]))
+general_cols = list(itertools.chain.from_iterable([[a + '_' + b + '_Pct', a + '_' + b + '_Pop'
+                ] for (a, b) in  itertools.product(
+                    ['ALL'], type_list[1:]
+                 )
+            ]))
+new_cols.extend(general_cols)
